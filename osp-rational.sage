@@ -36,3 +36,35 @@ def osp_schedule(osp):
 			sch[c-1] = len([i for i in runs[-1] if i < c and z[i] == 0]) + len([i for i in runs[-2] if i > c and z[i] == 0])
 	return sch
 
+def gale_compare(l1, l2):
+	assert len(l1) == len(l2)
+	return all([l1[i] >= l2[i] for i in range(len(l1))])
+
+class StackedPF:
+	def __init__(self, stack, label):
+		self.stack = stack
+		self.label = label
+
+	def __repr__(self):
+		return str(self.stack) + str(self.label)
+
+	def pp(self) -> None:
+		m = self.stack
+		osp = self.label
+		mm = osp.to_composition()
+		l = [sorted(osp[0])]
+		for i in range(len(mm)-1):
+			l.append(['*']*mm[i]+sorted(osp[i+1]))
+		l.reverse()
+		SkewPartition([m.partial_sums()[::-1], m.partial_sums()[::-1][1:]]).conjugate().pp()
+		Tableau(l).conjugate().pp()
+		print('\n')
+
+def stackpf(n,k):
+	for m in Compositions(n, min_length = k, max_length = k):
+		for mm in Compositions(n, min_length = k, max_length = k):
+			if gale_compare(mm.partial_sums(), m.partial_sums()):
+				for osp in OrderedSetPartitions(n, mm):
+					yield StackedPF(m, osp)
+
+
