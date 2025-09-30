@@ -63,15 +63,31 @@ class StackedPF:
 		return temp
 
 	def hdinv(self):
-		return
+		pairs = []
+		l = [j for i in self.label for j in sorted(i)]
+		h = self.height()
+		n = len(l)
+		for i in range(n):
+			for j in range(i,n):
+				if (h[i] == h[j] and l[i] < l[j]) or (h[i] == h[j]+1 and l[i] > l[j]):
+					pairs.append((i,j))
+		return len(pairs)
 
 	def wdinv(self):
-		return
+		pairs = []
+		l = [j for i in self.label for j in sorted(i)]
+		a = self.area()
+		diag = [0] + [i for i in self.stack.partial_sums()[:-1]]
+		for i in diag:
+			for j in range(i,len(l)):
+				if (a[i] == a[j] and l[i] < l[j]) or (a[i] == a[j]+1 and l[i] > l[j]):
+					pairs.append((i,j))
+		return len(pairs) - len(l) + len(self.stack)
 
 	def pp(self) -> None:
 		m = self.stack
 		osp = self.label
-		mm = osp.to_composition()
+		mm = osp.to_composition().partial_sums()
 		l = [sorted(osp[0])]
 		for i in range(len(mm)-1):
 			l.append([' ']*mm[i]+sorted(osp[i+1]))
