@@ -48,17 +48,38 @@ class StackedPF:
 	def __repr__(self):
 		return str(self.stack) + str(self.label)
 
+	def area(self):
+		m = self.stack
+		mm = self.label.to_composition()
+		return SkewPartition([mm.partial_sums()[::-1], m.partial_sums()[::-1]]).column_lengths()
+
+	def height(self):
+		m = self.stack
+		p1 = self.stack.partial_sums()
+		p2 = self.label.to_composition().partial_sums()
+		temp = list(range(p1[0])) + [p1[0]] * (p2[0]-p1[0])
+		for i in range(len(m)-1):
+			temp += list(range(p2[i] - p1[i], m[i+1])) + [m[i+1]]*(p2[i+1]-p1[i+1])
+		return temp
+
+	def hdinv(self):
+		return
+
+	def wdinv(self):
+		return
+
 	def pp(self) -> None:
 		m = self.stack
 		osp = self.label
 		mm = osp.to_composition()
 		l = [sorted(osp[0])]
 		for i in range(len(mm)-1):
-			l.append(['*']*mm[i]+sorted(osp[i+1]))
+			l.append([' ']*mm[i]+sorted(osp[i+1]))
 		l.reverse()
 		SkewPartition([m.partial_sums()[::-1], m.partial_sums()[::-1][1:]]).conjugate().pp()
-		Tableau(l).conjugate().pp()
 		print('\n')
+		Tableau(l).conjugate().pp()
+		print('\n\n')
 
 def stackpf(n,k):
 	for m in Compositions(n, min_length = k, max_length = k):
