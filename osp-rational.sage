@@ -58,8 +58,13 @@ def minus_one_sch(osp):
 	return [max(i-1,0) for i in osp_schedule(osp)]
 
 def gale_compare(l1, l2):
-	assert len(l1) == len(l2)
-	return all([l1[i] >= l2[i] for i in range(len(l1))])
+	return all([l1[i] >= l2[i] for i in range(min(len(l1),len(l2)))])
+
+def mosp_to_composition(m):
+	return [len(j) for j in m]
+
+def partial_sums(m):
+	return [sum(m[:i+1]) for i in range(len(m))]
 
 class StackedPF:
 	def __init__(self, stack, label):
@@ -71,13 +76,15 @@ class StackedPF:
 
 	def area(self):
 		m = self.stack
-		mm = self.label.to_composition()
-		return SkewPartition([mm.partial_sums()[::-1], m.partial_sums()[::-1]]).column_lengths()
+		n = m.size()
+		mm = partial_sums(mosp_to_composition(self.label)) + [n]*(len(self.stack) - len(self.label))
+		return SkewPartition([mm[::-1], m.partial_sums()[::-1]]).column_lengths()
 
 	def height(self):
 		m = self.stack
+		n = m.size()
 		p1 = self.stack.partial_sums()
-		p2 = self.label.to_composition().partial_sums()
+		p2 = partial_sums(mosp_to_composition(self.label)) + [n]*(len(self.stack) - len(self.label))
 		temp = list(range(p1[0])) + [p1[0]] * (p2[0]-p1[0])
 		for i in range(len(m)-1):
 			temp += list(range(p2[i] - p1[i], m[i+1])) + [m[i+1]]*(p2[i+1]-p1[i+1])
@@ -89,7 +96,7 @@ class StackedPF:
 		h = self.height()
 		n = len(l)
 		for i in range(n):
-			for j in range(i,n):
+			for j in range(i+1,n):
 				if (h[i] == h[j] and l[i] < l[j]) or (h[i] == h[j]+1 and l[i] > l[j]):
 					pairs.append((i,j))
 		return len(pairs)
@@ -100,7 +107,7 @@ class StackedPF:
 		a = self.area()
 		diag = [0] + [i for i in self.stack.partial_sums()[:-1]]
 		for i in diag:
-			for j in range(i,len(l)):
+			for j in range(i+1,len(l)):
 				if (a[i] == a[j] and l[i] < l[j]) or (a[i] == a[j]+1 and l[i] > l[j]):
 					pairs.append((i,j))
 		return len(pairs) - len(l) + len(self.stack)
@@ -108,15 +115,13 @@ class StackedPF:
 	def pp(self):
 		m = self.stack
 		osp = self.label
-		mm = osp.to_composition().partial_sums()
+		mm = partial_sums(mosp_to_composition(self.label))
 		l = [sorted(osp[0])]
 		for i in range(len(mm)-1):
 			l.append([' ']*mm[i]+sorted(osp[i+1]))
 		l.reverse()
-		SkewPartition([m.partial_sums()[::-1], m.partial_sums()[::-1][1:]]).conjugate().pp()
-		print('\n')
-		Tableau(l).conjugate().pp()
-		print('\n\n')
+		SkewPartition([m.partial_sums()[::-1], m.partial_sums()[::-1][1:]]).pp()
+		Tableau(l).pp()
 
 	def rise(self):
 		return ParkingFunction(labelling = [j for i in self.label for j in sorted(i)], area_sequence = self.height())
@@ -127,7 +132,7 @@ class StackedPF:
 
 def stdstackpf(n,k):
 	for m in Compositions(n, min_length = k, max_length = k):
-		for mm in Compositions(n, min_length = k, max_length = k):
+		for mm in Compositions(n, max_length = k):
 			if gale_compare(mm.partial_sums(), m.partial_sums()):
 				for osp in OrderedSetPartitions(n, mm):
 					yield StackedPF(m, osp)
@@ -135,7 +140,7 @@ def stdstackpf(n,k):
 def stdstackpfn(n):
 	for m in Compositions(n):
 		k = len(m)
-		for mm in Compositions(n, min_length = k, max_length = k):
+		for mm in Compositions(n, max_length = k):
 			if gale_compare(mm.partial_sums(), m.partial_sums()):
 				for osp in OrderedSetPartitions(n, mm):
 					yield StackedPF(m, osp)
