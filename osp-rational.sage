@@ -81,13 +81,18 @@ class StackedPF:
 		return SkewPartition([mm[::-1], m.partial_sums()[::-1]]).column_lengths()
 
 	def height(self):
-		m = self.stack
-		n = m.size()
-		p1 = self.stack.partial_sums()
-		p2 = partial_sums(mosp_to_composition(self.label)) + [n]*(len(self.stack) - len(self.label))
-		temp = list(range(p1[0])) + [p1[0]] * (p2[0]-p1[0])
-		for i in range(len(m)-1):
-			temp += list(range(p2[i] - p1[i], m[i+1])) + [m[i+1]]*(p2[i+1]-p1[i+1])
+		p1 = 0
+		p2 = 0
+		p3 = len(self.label[0])
+		temp = []
+		for j in range(len(self.label)):
+			temp += list(range(p2 - p1, p3 - p1))
+			p1 += self.stack[j]
+			p2 += len(self.label[j])
+			try:
+				p3 += len(self.label[j+1])
+			except:
+				continue
 		return temp
 
 	def hdinv(self):
