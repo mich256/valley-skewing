@@ -7,6 +7,9 @@ def osp_to_permutation(osp):
 		m = w[0]
 	return Permutation(w)
 
+def osp_minimaj(osp):
+	return osp_to_permutation(osp).major_index()
+
 def perm_area(w):
 	a = [len([j for j in range(i,len(w)) if j+1 in w.descents()]) for i in range(len(w))]
 	a.reverse()
@@ -28,6 +31,24 @@ def perm_schedule(w):
 		for i in r[j]:
 			s[v(i)-1] = len([k for k in r[j] if k > i]) + len([k for k in r[j+1] if k < i])
 	return s
+
+def osp_dinv(osp):
+	k = len(osp)
+	temp = 0
+	l = [sorted(i) for i in osp]
+	for i in range(k):
+		for j in range(i+1,k):
+			oi = l[i]
+			oj = l[j]
+			for h in range(len(oi)):
+				try:
+					if oi[h] > oj[h]:
+						temp += 1
+					if oi[h] < oj[h+1]:
+						temp += 1
+				except:
+					continue
+	return temp
 
 def osp_schedule(osp):
 	w = osp_to_permutation(osp)
@@ -55,7 +76,7 @@ def osp_schedule(osp):
 	return sch
 
 def minus_one_sch(osp):
-	return [max(i-1,0) for i in osp_schedule(osp)]
+	return sum([max(i-1,0) for i in osp_schedule(osp)])
 
 def gale_compare(l1, l2):
 	return all([l1[i] >= l2[i] for i in range(min(len(l1),len(l2)))])
