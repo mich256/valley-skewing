@@ -134,7 +134,6 @@ class StackedPF:
 	def valley(self):
 		return ParkingFunction(labelling = [j for i in self.label for j in sorted(i)], area_sequence = self.area())
 
-
 def stdstackpf(n,k):
 	for m in Compositions(n, min_length = k, max_length = k):
 		for mm in Compositions(n, max_length = k):
