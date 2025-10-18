@@ -25,9 +25,9 @@ class MPF:
 		self.marked_cars = {self.pf.cars_permutation()(i) for i in self.mark}
 		if len(mark) == 0:
 			self.type = 'normal'
-		elif mark[0] in set(rises(self.dw)):
+		elif next(iter(mark)) in set(rises(self.dw)):
 			self.type = 'rise'
-		elif mark[0] in set(valleys(pf)):
+		elif next(iter(mark)) in set(valleys(pf)):
 			self.type = 'valley'
 
 	def area(self):
@@ -37,24 +37,41 @@ class MPF:
 		else:
 			return self.dw.area()
 
-	def dinv_code(self):
+	def dinv_code1(self):
 		a = self.dw.to_area_sequence()
-		n = len(pf)
+		n = len(self.pf)
+		w = self.pf.cars_permutation()
+		for i in range(len(self.pf)):
+			temp = 0
+			for j in range(i):
+				if j+1 not in self.mark:
+					if a[j] == a[i] and w[i] > w[j]:
+						temp += 1
+					elif a[j] == a[i]+1 and w[i] < w[j]:
+						temp += 1
+			if self.type == 'valley' and i+1 in self.mark:
+				yield temp-1
+			else:
+				yield temp
+
+	def dinv_code2(self):
+		a = self.dw.to_area_sequence()
+		n = len(self.pf)
 		w = self.pf.cars_permutation()
 		if self.type == 'valley':
-			for i in range(len(pf)):
+			for i in range(len(self.pf)):
 				temp = 0
-				if i not in self.mark:
+				if i+1 not in self.mark:
 					for j in range(i+1,n):
-						if j not in self.mark:
+						if j+1 not in self.mark:
 							if a[j] == a[i] and w[i] < w[j]:
 								temp += 1
 							elif a[j] == a[i]-1 and w[i] > w[j]:
 								temp += 1
 					yield temp
-				elif i in self.mark:
+				elif i+1 in self.mark:
 					for j in range(i):
-						if j not in self.mark:
+						if j+1 not in self.mark:
 							if a[j] == a[i] and w[i] > w[j]:
 								temp += 1
 							elif a[j] == a[i]+1 and w[i] < w[j]:
@@ -62,7 +79,7 @@ class MPF:
 					yield temp
 			return
 		else:
-			for i in range(len(pf)):
+			for i in range(len(self.pf)):
 				temp = 0
 				for j in range(i+1,n):
 					if a[j] == a[i] and w[i] < w[j]:
@@ -73,7 +90,7 @@ class MPF:
 
 	def dinv(self):
 		if self.type == 'valley':
-			return sum(dinv_code(self))
+			return sum(self.dinv_code2())
 		else:
 			return self.pf.dinv()
 
