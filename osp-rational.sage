@@ -56,7 +56,12 @@ def osp_schedule(osp):
 	runs = w.runs()
 	z = dict(zip(w,osp_to_markings(osp)))
 	if len(runs) == 1:
-		return [len([i for i in w if i > c and z[i] == 0]) for c in w]
+		for c in runs[0]:
+			if z[c] == 0:
+				sch[c-1] = len([i for i in runs[0] if i > c and z[i] == 0]) + 1
+			else:
+				sch[c-1] = len([i for i in runs[0] if i < c and z[i] == 0])
+		return sch
 	for c in runs[0]:
 		if z[c] == 0:
 			sch[c-1] = len([i for i in runs[0] if i > c and z[i] == 0]) + len([i for i in runs[1] if i < c and z[i] == 0])
