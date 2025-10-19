@@ -8,7 +8,7 @@ def rises(dw):
 def valleys(pf):
 	dw = pf.to_dyck_word()
 	s = 1 + dw[1]
-	w = pf.cars_permutation()
+	w = pf.to_labelling_permutation()
 	for i in range(2,len(dw)):
 		s += dw[i]
 		if dw[i] == 1 and dw[i-1] == 0:
@@ -22,7 +22,7 @@ class MPF:
 		self.pf = pf
 		self.dw = pf.to_dyck_word()
 		self.mark = mark
-		self.marked_cars = {self.pf.cars_permutation()(i) for i in self.mark}
+		self.marked_cars = {self.pf.to_labelling_permutation()(i) for i in self.mark}
 		if len(mark) == 0:
 			self.type = 'normal'
 		elif next(iter(mark)) in set(rises(self.dw)):
@@ -39,11 +39,17 @@ class MPF:
 	def dinv_code1(self):
 		a = self.dw.to_area_sequence()
 		n = len(self.pf)
-		w = self.pf.cars_permutation()
+		w = self.pf.to_labelling_permutation()
 		for i in range(len(self.pf)):
 			temp = 0
 			for j in range(i):
-				if j+1 not in self.mark:
+				if self.type == 'valley':
+					if j+1 not in self.mark:
+						if a[j] == a[i] and w[i] > w[j]:
+							temp += 1
+						elif a[j] == a[i]+1 and w[i] < w[j]:
+							temp += 1
+				else:
 					if a[j] == a[i] and w[i] > w[j]:
 						temp += 1
 					elif a[j] == a[i]+1 and w[i] < w[j]:
@@ -56,7 +62,7 @@ class MPF:
 	def dinv_code2(self):
 		a = self.dw.to_area_sequence()
 		n = len(self.pf)
-		w = self.pf.cars_permutation()
+		w = self.pf.to_labelling_permutation()
 		if self.type == 'valley':
 			for i in range(len(self.pf)):
 				temp = 0
@@ -75,7 +81,7 @@ class MPF:
 								temp += 1
 							elif a[j] == a[i]+1 and w[i] < w[j]:
 								temp += 1
-					yield temp
+					yield temp-1
 			return
 		else:
 			for i in range(len(self.pf)):
@@ -100,28 +106,37 @@ class MPF:
 	def __repr__(self):
 		return self.pf, self.marked_cars
 
-	def latex(self):
-		w = self.pf.cars_permutation()
+	def latex(self, aa = False, dd = False):
+		w = self.pf.to_labelling_permutation()
 		dw = self.dw
 		n = dw.semilength()
-		res = '\\begin{tikzpicture}\n'
-		res += '\draw[dotted] %d grid %d;\n' % (n,n)
-		res += '\draw[thick] (0,0)'
-		label = '\draw node at (1,0) {%d};\n' % w[0]
+		res = '\\begin{tikzpicture}[scale=0.5]\n'
+		res += '\\draw[dotted] (0,0) grid (%d,%d);\n' % (n,n)
+		res += '\\draw[thick] (0,0)'
+		label = '\\draw node at (0.5,0.5) {%d};\n' % w[0]
 		mark = ''
+		stats = ''
 		coord = [0,0]
-		for i in range(n):
+		for i in range(len(dw)):
 			if dw[i] == 1:
 				coord[1] += 1
-				label += '\draw node at (%d,%d) {%d};\n' % (coord[0]+1,coord
-				[1], w[i])
-				if i+1 in self.mark:
-					mark += '\draw node at (%d,%d) {*};\n' % (coord[0]-1,coord[1])
+				label += '\\draw node at (%f,%f) {%d};\n' % (coord[0]+0.5,coord[1]-0.5, w(coord[1]))
+				if coord[1] in self.mark:
+					mark += '\\draw node at (%f,%f) {*};\n' % (coord[0]-0.25,coord[1]-0.5)
 			if dw[i] == 0:
 				coord[0] += 1
 			res += '--(%d,%d)'% tuple(coord)
-		res += ';\n\end{tikzpicture}\n'
-		return res + label + mark
+		if aa:
+			if self.type == 'rise':
+				stats += '\\draw node at (1,-.5) {area-: %d};\n' % self.area()
+			else:
+				stats += '\\draw node at (1,-.5) {area: %d};\n' % self.area()
+		if dd:
+			if self.type == 'valley':
+				stats += '\\draw node at (1,-1.5) {dinv-: %d};\n' % self.dinv()
+			else:
+				stats += '\\draw node at (1,-1.5) {dinv: %d};\n' % self.dinv()
+		return res + ';\n' + label + mark + stats + '\\end{tikzpicture}\n'
 
 def riseMPF(n,k):
 	for pf in ParkingFunctions(n):
