@@ -31,9 +31,8 @@ class MPF:
 			self.type = 'valley'
 
 	def area(self):
-		if type == 'rise':
-			return sum([self.dw.to_area_sequence()[i] for i in range(len(pf)) 
-				if i not in self.mark])
+		if self.type == 'rise':
+			return sum([self.dw.to_area_sequence()[i] for i in range(len(self.pf)) if i+1 not in self.mark])
 		else:
 			return self.dw.area()
 
@@ -100,6 +99,29 @@ class MPF:
 
 	def __repr__(self):
 		return self.pf, self.marked_cars
+
+	def latex(self):
+		w = self.pf.cars_permutation()
+		dw = self.dw
+		n = dw.semilength()
+		res = '\\begin{tikzpicture}\n'
+		res += '\draw[dotted] %d grid %d;\n' % (n,n)
+		res += '\draw[thick] (0,0)'
+		label = '\draw node at (1,0) {%d};\n' % w[0]
+		mark = ''
+		coord = [0,0]
+		for i in range(n):
+			if dw[i] == 1:
+				coord[1] += 1
+				label += '\draw node at (%d,%d) {%d};\n' % (coord[0]+1,coord
+				[1], w[i])
+				if i+1 in self.mark:
+					mark += '\draw node at (%d,%d) {*};\n' % (coord[0]-1,coord[1])
+			if dw[i] == 0:
+				coord[0] += 1
+			res += '--(%d,%d)'% tuple(coord)
+		res += ';\n\end{tikzpicture}\n'
+		return res + label + mark
 
 def riseMPF(n,k):
 	for pf in ParkingFunctions(n):
