@@ -101,19 +101,12 @@ class MPF:
 			temp = []
 			for i in range(len(self.pf)):
 				if i+1 in self.mark:
-					switch = False
 					for j in range(i):
 						if j+1 not in self.mark:
 							if a[j] == a[i] and w[i] > w[j]:
-								if switch:
-									temp.append((j+1,i+1))
-								else:
-									switch = True
+								temp.append((j+1,i+1))
 							elif a[j] == a[i] + 1 and w[i] < w[j]:
-								if switch:
-									temp.append((j+1,i+1))
-								else:
-									switch = True
+								temp.append((j+1,i+1))
 				elif i+1 not in self.mark:
 					for j in range(i):
 						if j+1 not in self.mark:
@@ -129,6 +122,19 @@ class MPF:
 		w = self.pf.to_labelling_permutation()
 		return set([tuple(sorted((w(i),w(j)))) for (i,j) in self.dinv_pairs()])
 
+	def dinv_code3(self):
+		w = self.pf.to_labelling_permutation()
+		v = w.inverse()
+		sett = self.dinv_pairs()
+		for i in range(1,len(self.pf)+1):
+			temp = 0
+			for j in range(1,i):
+				if tuple(sorted((v(i),v(j)))) in sett:
+					temp += 1
+			if self.type == 'valley' and v(i) in self.mark:
+				yield temp - 1
+			else:
+				yield temp
 
 	def dinv(self):
 		if self.type == 'valley':
