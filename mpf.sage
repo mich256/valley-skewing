@@ -32,12 +32,12 @@ class MPF:
 
 	def area(self):
 		if self.type == 'rise':
-			return sum([self.dw.to_area_sequence()[i] for i in range(len(self.pf)) if i+1 not in self.mark])
+			return sum([self.pf.to_area_sequence()[i] for i in range(len(self.pf)) if i+1 not in self.mark])
 		else:
 			return self.dw.area()
 
 	def dinv_code1(self):
-		a = self.dw.to_area_sequence()
+		a = self.pf.to_area_sequence()
 		n = len(self.pf)
 		w = self.pf.to_labelling_permutation()
 		for i in range(len(self.pf)):
@@ -60,7 +60,7 @@ class MPF:
 				yield temp
 
 	def dinv_code2(self):
-		a = self.dw.to_area_sequence()
+		a = self.pf.to_area_sequence()
 		n = len(self.pf)
 		w = self.pf.to_labelling_permutation()
 		if self.type == 'valley':
@@ -92,6 +92,43 @@ class MPF:
 					elif a[j] == a[i]-1 and w[i] > w[j]:
 						temp += 1
 				yield temp
+
+	def dinv_pairs(self):
+		if self.type == 'valley':
+			a = self.pf.to_area_sequence()
+			n = len(self.pf)
+			w = self.pf.to_labelling_permutation()
+			temp = set()
+			for i in range(len(self.pf)):
+				if i+1 in self.marked:
+					switch = False
+					for j in range(i):
+						if j not in self.marked:
+							if a[j] == a[i] and w[i] > w[j]:
+								if switch:
+									set.add((j+1,i+1))
+								else:
+									switch = True
+							elif a[j] == a[i] + 1 and w[i] < w[j]:
+								if switch:
+									set.add((j+1,i+1))
+								else:
+									switch = True
+				elif i+1 not in self.marked:
+					for j in range(i):
+						if j not in self.marked:
+							if a[j] == a[i] and w[i] > w[j]:
+								set.add((j+1,i+1))
+							elif a[j] == a[i] + 1 and w[i] < w[j]:
+								set.add((j+1,i+1))
+			return temp
+		else:
+			return set([(i+1,j+1) for (i,j) in self.pf.dinversion_pairs()])
+
+	def dinv_pairs_label(self):
+		w = self.pf.to_labelling_permutation()
+		return set([tuple(sorted((w(i),w(j)))) for (i,j) in self.dinv_pairs()])
+
 
 	def dinv(self):
 		if self.type == 'valley':
@@ -136,7 +173,7 @@ class MPF:
 				stats += '\\draw node at (1,-1.5) {dinv-: %d};\n' % self.dinv()
 			else:
 				stats += '\\draw node at (1,-1.5) {dinv: %d};\n' % self.dinv()
-		return res + ';\n' + label + mark + stats + '\\end{tikzpicture}\n'
+		print(res + ';\n' + label + mark + stats + '\\end{tikzpicture}')
 
 def riseMPF(n,k):
 	for pf in ParkingFunctions(n):
