@@ -98,30 +98,30 @@ class MPF:
 			a = self.pf.to_area_sequence()
 			n = len(self.pf)
 			w = self.pf.to_labelling_permutation()
-			temp = set()
+			temp = []
 			for i in range(len(self.pf)):
-				if i+1 in self.marked:
+				if i+1 in self.mark:
 					switch = False
 					for j in range(i):
-						if j not in self.marked:
+						if j+1 not in self.mark:
 							if a[j] == a[i] and w[i] > w[j]:
 								if switch:
-									set.add((j+1,i+1))
+									temp.append((j+1,i+1))
 								else:
 									switch = True
 							elif a[j] == a[i] + 1 and w[i] < w[j]:
 								if switch:
-									set.add((j+1,i+1))
+									temp.append((j+1,i+1))
 								else:
 									switch = True
-				elif i+1 not in self.marked:
+				elif i+1 not in self.mark:
 					for j in range(i):
-						if j not in self.marked:
+						if j+1 not in self.mark:
 							if a[j] == a[i] and w[i] > w[j]:
-								set.add((j+1,i+1))
+								temp.append((j+1,i+1))
 							elif a[j] == a[i] + 1 and w[i] < w[j]:
-								set.add((j+1,i+1))
-			return temp
+								temp.append((j+1,i+1))
+			return set(temp)
 		else:
 			return set([(i+1,j+1) for (i,j) in self.pf.dinversion_pairs()])
 
