@@ -175,3 +175,14 @@ def stdstackpfn(n):
 				for osp in OrderedSetPartitions(n, mm):
 					yield StackedPF(m, osp)
 
+def maj_d(w,d):
+	assert d < len(w)
+	md = 0
+	for i,j in w.inversions():
+		if j-i < d:
+			md += 1
+		elif j-i == d:
+			md += i
+	return md
+
+
