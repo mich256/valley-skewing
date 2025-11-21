@@ -185,4 +185,3 @@ def maj_d(w,d):
 			md += i
 	return md
 
-
