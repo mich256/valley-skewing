@@ -27,9 +27,12 @@ class RationalPF:
 		self.horizontal = h
 		self.vertical = v
 		if diagram:
-			self.full = [v - diagram[0]] + to_exp_nozero(diagram.conjugate())
+			self.fullv = [v - diagram[0]] + to_exp_nozero(diagram.conjugate())
+			self.fullh = horizontal = [h - diagram.conjugate()[0]] + to_exp_nozero(diagram)
+			self.fullh.reverse()
 		else:
-			self.full = [v]
+			self.fullh = [h]
+			self.fullv = [v]
 
 	def area(self):
 		h = self.horizontal
@@ -45,18 +48,14 @@ class RationalPF:
 		p = self.diagram
 		counter = 0
 		if p:
-			q = p.conjugate()
-			horizontal = [h - q[0]] + to_exp_nozero(p)
-			horizontal = horizontal[::-1]
-			vertical = self.full
-			for i in range(len(vertical)):
-				for j in range(vertical[i]):
+			for i in range(len(self.fullv)):
+				for j in range(self.fullv[i]):
 					try:
 						r[self.labels[i][j]] = counter
 					except:
 						pass
 					counter += h // g
-				counter -= (v // g) * horizontal[i]
+				counter -= (v // g) * self.fullh[i]
 			return r
 		else:
 			return dict([(i,i) for i in range(len(self.labels[0]))])
@@ -79,29 +78,15 @@ class RationalPF:
 
 	def trunc(self):
 		t = []
-		for i in range(len(self.full)):
+		for i in range(len(self.fullv)):
 			tt = []
-			for j in range(self.full[i]):
+			for j in range(self.fullv[i]):
 				try:
 					tt.append(self.labels[i][j])
 				except:
 					tt.append(' ')
 			t.append(tt)
 		return t
-
-	# def skewtab(self):
-	# 	t = []
-	# 	p = self.diagram
-	# 	if p:
-	# 		for i in range(len(p)):
-	# 			t.append([None]*p[i] + self.labels[i][::-1])
-	# 		t.append(self.labels[-1][::-1])
-	# 	else:
-	# 		t.append(self.labels[0][::-1])
-	# 	return SkewTableau(t).conjugate()
-
-	# def pp(self):
-	# 	self.skewtab().pp()
 
 	def skewtab(self):
 		t = []
@@ -117,6 +102,26 @@ class RationalPF:
 
 	def pp(self):
 		self.skewtab().pp()
+
+	def latex(self):
+		s = '\\begin{tikzpicture}[scale=0.5]\n'
+		s += f'\\draw[dotted] (0,0) grid ({self.horizontal:d},{self.vertical:d});\n'
+		s += f'\\draw[dotted] (0,0) -- ({self.horizontal:d},{self.vertical:d});\n'
+		s += '\\draw[thick] (0,0)'
+		m = ''
+		i,j = 0,0
+		inc = 0.5
+		for k in range(len(self.fullv)):
+			h = j
+			for l in self.labels[k]:
+				m += f'\\node at ({i+inc:.1f},{h+inc:.1f}) {{{l:d}}}; \n'
+				h += 1
+			j += self.fullv[k]
+			s += f'--({i:d},{j:d})'
+			i += self.fullh[k]
+			s += f'--({i:d},{j:d})'
+		s += ';\n'
+		print(s + m + '\\end{tikzpicture}')
 
 def rational_pf(h,v):
 	staircase = Partition([floor((h-i)*v/h) for i in range(1,h)])
@@ -141,11 +146,5 @@ def rpf(n,k):
 				vertical = [k*(n-k+1)]
 			for y in Compositions(n, outer = vertical, inner = [i-n+k for i in vertical]):
 				for osp in OrderedSetPartitions(n,y):
-					# t = []
-					# big = n+1
-					# for i in range(len(y)):
-					# 	diff = vertical[i] - y[i]
-					# 	t.append(sorted(osp[i]) + list(range(big, big+diff)))
-					# 	big += diff
 					yield RationalPF(x, k, k*(n-k+1), [sorted(i) for i in osp])
 
