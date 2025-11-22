@@ -118,9 +118,12 @@ class RationalPF:
 		inc = 0.5
 		for k in range(len(self.fullv)):
 			h = j
-			for l in self.labels[k]:
-				m += f'\\node at ({i+inc:.1f},{h+inc:.1f}) {{{l:d}}};\n'
-				h += 1
+			try:
+				for l in self.labels[k]:
+					m += f'\\node at ({i+inc:.1f},{h+inc:.1f}) {{{l:d}}};\n'
+					h += 1
+			except:
+				pass
 			j += self.fullv[k]
 			s += f'--({i:d},{j:d})'
 			i += self.fullh[k]
@@ -142,14 +145,14 @@ def rational_pf(h,v):
 
 def rpf(n,k):
 	staircase = Partition([(k-i)*(n-k+1) for i in range(1,k)])
-	yield RationalPF(Partition([]), k, k*(n-k+1), [list(range(1,n+1))])
 	for m in range(staircase.size()+1):
 		for x in Partitions(m, outer = staircase):
 			if x:
 				vertical = [k*(n-k+1) - x[0]] + to_exp_nozero(x.conjugate())
 			else:
 				vertical = [k*(n-k+1)]
-			for y in Compositions(n, outer = vertical, inner = [i-n+k for i in vertical]):
+			inside = [i-n+k for i in vertical if i-n+k > 0]
+			for y in Compositions(n, outer = vertical, inner = inside):
 				for osp in OrderedSetPartitions(n,y):
 					yield RationalPF(x, k, k*(n-k+1), [sorted(i) for i in osp])
 

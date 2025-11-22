@@ -36,63 +36,6 @@ class MPF:
 		else:
 			return self.dw.area()
 
-	def dinv_code1(self):
-		a = self.pf.to_area_sequence()
-		n = len(self.pf)
-		w = self.pf.to_labelling_permutation()
-		for i in range(len(self.pf)):
-			temp = 0
-			for j in range(i):
-				if self.type == 'valley':
-					if j+1 not in self.mark:
-						if a[j] == a[i] and w[i] > w[j]:
-							temp += 1
-						elif a[j] == a[i]+1 and w[i] < w[j]:
-							temp += 1
-				else:
-					if a[j] == a[i] and w[i] > w[j]:
-						temp += 1
-					elif a[j] == a[i]+1 and w[i] < w[j]:
-						temp += 1
-			if self.type == 'valley' and i+1 in self.mark:
-				yield temp-1
-			else:
-				yield temp
-
-	def dinv_code2(self):
-		a = self.pf.to_area_sequence()
-		n = len(self.pf)
-		w = self.pf.to_labelling_permutation()
-		if self.type == 'valley':
-			for i in range(len(self.pf)):
-				temp = 0
-				if i+1 not in self.mark:
-					for j in range(i+1,n):
-						if j+1 not in self.mark:
-							if a[j] == a[i] and w[i] < w[j]:
-								temp += 1
-							elif a[j] == a[i]-1 and w[i] > w[j]:
-								temp += 1
-					yield temp
-				elif i+1 in self.mark:
-					for j in range(i):
-						if j+1 not in self.mark:
-							if a[j] == a[i] and w[i] > w[j]:
-								temp += 1
-							elif a[j] == a[i]+1 and w[i] < w[j]:
-								temp += 1
-					yield temp-1
-			return
-		else:
-			for i in range(len(self.pf)):
-				temp = 0
-				for j in range(i+1,n):
-					if a[j] == a[i] and w[i] < w[j]:
-						temp += 1
-					elif a[j] == a[i]-1 and w[i] > w[j]:
-						temp += 1
-				yield temp
-
 	def dinv_pairs(self):
 		if self.type == 'valley':
 			a = self.pf.to_area_sequence()
@@ -122,32 +65,44 @@ class MPF:
 		w = self.pf.to_labelling_permutation()
 		return set([tuple(sorted((w(i),w(j)))) for (i,j) in self.dinv_pairs()])
 
-	def dinv_code3(self):
-		w = self.pf.to_labelling_permutation()
-		v = w.inverse()
-		sett = self.dinv_pairs()
-		for i in range(1,len(self.pf)+1):
-			temp = 0
-			for j in range(1,i):
-				if tuple(sorted((v(i),v(j)))) in sett:
-					temp += 1
-			if self.type == 'valley' and v(i) in self.mark:
-				yield temp - 1
-			else:
-				yield temp
-
 	def dinv(self):
 		if self.type == 'valley':
-			return sum(self.dinv_code2())
+			return len(self.dinv_pairs())
 		else:
 			return self.pf.dinv()
+
+	def diagonal_reading(self):
+		dr = {i:[] for i in range(len(self.pf))}
+		w = self.pf.to_labelling_permutation()
+		rank = 0
+		counter = 1
+		for i in self.dw:
+			if i == 1:
+				if counter not in self.mark:
+					dr[rank].append(w(counter))
+				else:
+					dr[rank].append((w(counter),'*'))
+				rank += 1
+				counter += 1
+			else:
+				rank -= 1
+		return dr
+
+	def d_reading_set(self):
+		dr = self.diagonal_reading()
+		t = []
+		for i in range(len(dr)):
+			if dr[i]:
+				t.append(set(dr[i]))
+		return t
 
 	def pp(self):
 		self.pf.pretty_print()
 		print(self.marked_cars)
 
 	def __repr__(self):
-		return self.pf, self.marked_cars
+		self.pf.pretty_print()
+		return str(self.marked_cars)
 
 	def latex(self, aa = False, dd = False):
 		w = self.pf.to_labelling_permutation()
@@ -156,20 +111,20 @@ class MPF:
 		res = '\\begin{tikzpicture}[scale=0.5]\n'
 		res += f'\\draw[dotted] (0,0) grid ({n:d},{n:d});\n'
 		res += '\\draw[thick] (0,0)'
-		label = f'\\draw node at (0.5,0.5) {w[0]:d};\n'
+		label = f'\\draw node at (0.5,0.5) {{{w[0]:d}}};\n'
 		mark = ''
 		stats = ''
-		coord = [0,0]
+		c1, c2 = 0, 0
 		inc = 0.5
 		for i in range(len(dw)):
 			if dw[i] == 1:
-				coord[1] += 1
-				label += f'\\draw node at ({coord[0]+inc:.1f},{coord[1]-inc:.1f}) {w(coord[1]):d};\n'
-				if coord[1] in self.mark:
-					mark += f'\\draw node at ({coord[0]-inc:.1f},{coord[1]+inc:.1f}) {{*}};\n'
+				c2 += 1
+				label += f'\\draw node at ({c1+inc:.1f},{c2-inc:.1f}) {{{w(c2):d}}};\n'
+				if c2 in self.mark:
+					mark += f'\\draw node at ({c1-inc:.1f},{c2-inc:.1f}) {{*}};\n'
 			if dw[i] == 0:
-				coord[0] += 1
-			res += '--({},{})'.format(coord)
+				c1 += 1
+			res += '--({},{})'.format(c1, c2)
 		if aa:
 			if self.type == 'rise':
 				stats += f'\\draw node at (1,-.5) {{area-: {self.area():d}}};\n'
