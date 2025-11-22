@@ -155,7 +155,6 @@ class MPF:
 		n = dw.semilength()
 		res = '\\begin{tikzpicture}[scale=0.5]\n'
 		res += f'\\draw[dotted] (0,0) grid ({n:d},{n:d});\n'
-		res += f'\\draw[thick,dotted] (0,0) -- ({n:d},{n:d});\n'
 		res += '\\draw[thick] (0,0)'
 		label = f'\\draw node at (0.5,0.5) {w[0]:d};\n'
 		mark = ''

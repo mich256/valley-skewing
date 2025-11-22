@@ -106,7 +106,6 @@ class RationalPF:
 	def latex(self):
 		s = '\\begin{tikzpicture}[scale=0.5]\n'
 		s += f'\\draw[dotted] (0,0) grid ({self.horizontal:d},{self.vertical:d});\n'
-		s += f'\\draw[thick,dotted] (0,0) -- ({self.horizontal:d},{self.vertical:d});\n'
 		s += '\\draw[thick] (0,0)'
 		m = ''
 		i,j = 0,0
