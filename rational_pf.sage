@@ -47,11 +47,13 @@ class RationalPF:
 		g = gcd(h,v)
 		p = self.diagram
 		counter = 0
+		self.diagonal_reading = {i:[] for i in range(v)}
 		if p:
 			for i in range(len(self.fullv)):
 				for j in range(self.fullv[i]):
 					try:
 						r[self.labels[i][j]] = counter
+						self.diagonal_reading[counter].append(self.labels[i][j])
 					except:
 						pass
 					counter += h // g
@@ -59,6 +61,10 @@ class RationalPF:
 			return r
 		else:
 			return dict([(i,i) for i in range(len(self.labels[0]))])
+
+	def diagonal_reading(self):
+		self.rank()
+		return self.diagonal_reading
 
 	def labelling_permutation(self):
 		return Permutation([i for j in self.labels for i in j])
@@ -70,7 +76,7 @@ class RationalPF:
 			for j in w:
 				if i < j and w(i) < w(j) and r[i] == r[j]:
 					yield (i,j)
-				if i < j and w(i) > w(j) and r[i] == r[j] + 1:
+				if i < j and w(i) > w(j) and r[j] == r[i] + 1:
 					yield (i,j)
 
 	def dinv(self):
