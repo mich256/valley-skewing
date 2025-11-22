@@ -154,31 +154,33 @@ class MPF:
 		dw = self.dw
 		n = dw.semilength()
 		res = '\\begin{tikzpicture}[scale=0.5]\n'
-		res += '\\draw[dotted] (0,0) grid (%d,%d);\n' % (n,n)
+		res += f'\\draw[dotted] (0,0) grid ({n:d},{n:d});\n'
+		res += f'\\draw[thick,dotted] (0,0) -- ({n:d},{n:d});\n'
 		res += '\\draw[thick] (0,0)'
-		label = '\\draw node at (0.5,0.5) {%d};\n' % w[0]
+		label = f'\\draw node at (0.5,0.5) {w[0]:d};\n'
 		mark = ''
 		stats = ''
 		coord = [0,0]
+		inc = 0.5
 		for i in range(len(dw)):
 			if dw[i] == 1:
 				coord[1] += 1
-				label += '\\draw node at (%f,%f) {%d};\n' % (coord[0]+0.5,coord[1]-0.5, w(coord[1]))
+				label += f'\\draw node at ({coord[0]+inc:.1f},{coord[1]-inc:.1f}) {w(coord[1]):d};\n'
 				if coord[1] in self.mark:
-					mark += '\\draw node at (%f,%f) {*};\n' % (coord[0]-0.25,coord[1]-0.5)
+					mark += f'\\draw node at ({coord[0]-inc:.1f},{coord[1]+inc:.1f}) {{*}};\n'
 			if dw[i] == 0:
 				coord[0] += 1
-			res += '--(%d,%d)'% tuple(coord)
+			res += '--({},{})'.format(coord)
 		if aa:
 			if self.type == 'rise':
-				stats += '\\draw node at (1,-.5) {area-: %d};\n' % self.area()
+				stats += f'\\draw node at (1,-.5) {{area-: {self.area():d}}};\n'
 			else:
-				stats += '\\draw node at (1,-.5) {area: %d};\n' % self.area()
+				stats += f'\\draw node at (1,-.5) {{area: {self.area():d}}};\n'
 		if dd:
 			if self.type == 'valley':
-				stats += '\\draw node at (1,-1.5) {dinv-: %d};\n' % self.dinv()
+				stats += f'\\draw node at (1,-1.5) {{dinv-: {self.dinv():d}}};\n'
 			else:
-				stats += '\\draw node at (1,-1.5) {dinv: %d};\n' % self.dinv()
+				stats += f'\\draw node at (1,-1.5) {{dinv: {self.dinv():d}}};\n'
 		print(res + ';\n' + label + mark + stats + '\\end{tikzpicture}')
 
 def riseMPF(n,k):

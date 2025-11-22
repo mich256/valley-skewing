@@ -106,7 +106,7 @@ class RationalPF:
 	def latex(self):
 		s = '\\begin{tikzpicture}[scale=0.5]\n'
 		s += f'\\draw[dotted] (0,0) grid ({self.horizontal:d},{self.vertical:d});\n'
-		s += f'\\draw[dotted] (0,0) -- ({self.horizontal:d},{self.vertical:d});\n'
+		s += f'\\draw[thick,dotted] (0,0) -- ({self.horizontal:d},{self.vertical:d});\n'
 		s += '\\draw[thick] (0,0)'
 		m = ''
 		i,j = 0,0
@@ -114,7 +114,7 @@ class RationalPF:
 		for k in range(len(self.fullv)):
 			h = j
 			for l in self.labels[k]:
-				m += f'\\node at ({i+inc:.1f},{h+inc:.1f}) {{{l:d}}}; \n'
+				m += f'\\node at ({i+inc:.1f},{h+inc:.1f}) {{{l:d}}};\n'
 				h += 1
 			j += self.fullv[k]
 			s += f'--({i:d},{j:d})'
@@ -137,7 +137,7 @@ def rational_pf(h,v):
 
 def rpf(n,k):
 	staircase = Partition([(k-i)*(n-k+1) for i in range(1,k)])
-	yield RationalPF(Partition([]), k, k*(n-k+1), [list(range(1,k*(n-k+1)+1))])
+	yield RationalPF(Partition([]), k, k*(n-k+1), [list(range(1,n+1))])
 	for m in range(staircase.size()+1):
 		for x in Partitions(m, outer = staircase):
 			if x:
