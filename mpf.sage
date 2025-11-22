@@ -81,20 +81,21 @@ class MPF:
 				if counter not in self.mark:
 					dr[rank].append(w(counter))
 				else:
-					dr[rank].append((w(counter),'*'))
+					dr[rank].append(w(counter))
+					#dr[rank].append((w(counter),'*'))
 				rank += 1
 				counter += 1
 			else:
 				rank -= 1
 		return dr
 
-	def d_reading_set(self):
+	def dr_set(self):
 		dr = self.diagonal_reading()
 		t = []
 		for i in range(len(dr)):
 			if dr[i]:
-				t.append(set(dr[i]))
-		return t
+				t.append(frozenset(dr[i]))
+		return tuple(t)
 
 	def pp(self):
 		self.pf.pretty_print()

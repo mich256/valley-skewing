@@ -1,10 +1,5 @@
 def to_exp_nozero(p):
-	t = p.to_exp()
-	t.reverse()
-	while t and t[-1] == 0:
-		t.pop()
-	t.reverse()
-	return t
+	return [i for i in p.to_exp() if i != 0]
 
 def p_to_dw(p, h, v):
 	if p:
@@ -28,7 +23,7 @@ class RationalPF:
 		self.vertical = v
 		if diagram:
 			self.fullv = [v - diagram[0]] + to_exp_nozero(diagram.conjugate())
-			self.fullh = horizontal = [h - diagram.conjugate()[0]] + to_exp_nozero(diagram)
+			self.fullh = [h - diagram.conjugate()[0]] + to_exp_nozero(diagram)
 			self.fullh.reverse()
 		else:
 			self.fullh = [h]
@@ -63,8 +58,26 @@ class RationalPF:
 			return dict([(i,i) for i in range(len(self.labels[0]))])
 
 	def diagonal_reading(self):
-		self.rank()
-		return self.diagonal_reading
+		try:
+			return self.diagonal_reading
+		except:
+			self.rank()
+			return self.diagonal_reading
+
+	def dr_set(self):
+		try:
+			t = []
+			for i in range(len(self.diagonal_reading)):
+				if self.diagonal_reading[i]:
+					t.append(frozenset(self.diagonal_reading[i]))
+			return tuple(t)
+		except:
+			self.rank()
+			t = []
+			for i in range(len(self.diagonal_reading)):
+				if self.diagonal_reading[i]:
+					t.append(frozenset(self.diagonal_reading[i]))
+			return tuple(t)
 
 	def labelling_permutation(self):
 		return Permutation([i for j in self.labels for i in j])
@@ -99,8 +112,13 @@ class RationalPF:
 		p = self.diagram
 		tr = self.trunc()
 		if p:
+			temp = self.vertical
 			for i in range(len(p)):
-				t.append([None]*p[i] + tr[i][::-1])
+				if p[i] < temp:
+					t.append([None]*p[i]+tr[i][::-1])
+					temp = p[i]
+				else:
+					t.append([None]*p[i])
 			t.append(tr[-1][::-1])
 		else:
 			t.append(tr[0][::-1])
