@@ -174,3 +174,14 @@ def rpf(n,k):
 				for osp in OrderedSetPartitions(n,y):
 					yield RationalPF(x, k, k*(n-k+1), [sorted(i) for i in osp])
 
+
+def test(n,k,a):
+	s = set()
+	d = dict()
+	for pf in rpf(n,k):
+		if pf.area() == a:
+			fs = pf.dr_set()
+			s.add(fs)
+			d.setdefault(fs, [])
+			d[fs].append(pf)
+	return d

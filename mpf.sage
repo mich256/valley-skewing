@@ -94,8 +94,8 @@ class MPF:
 		t = []
 		for i in range(len(dr)):
 			if dr[i]:
-				t.append(frozenset(dr[i]))
-		return tuple(t)
+				t.append(set(dr[i]))
+		return OrderedSetPartition(t)
 
 	def pp(self):
 		self.pf.pretty_print()
@@ -112,7 +112,7 @@ class MPF:
 		res = '\\begin{tikzpicture}[scale=0.5]\n'
 		res += f'\\draw[dotted] (0,0) grid ({n:d},{n:d});\n'
 		res += '\\draw[thick] (0,0)'
-		label = f'\\draw node at (0.5,0.5) {{{w[0]:d}}};\n'
+		label = ''
 		mark = ''
 		stats = ''
 		c1, c2 = 0, 0
