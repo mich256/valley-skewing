@@ -16,14 +16,14 @@ def p_to_dw(p, h, v):
 
 class RationalPF:
 	def __init__(self, diagram, h, v, labels):
-		self.diagram = diagram
+		self.diagram = Partition(diagram)
 		# self.dyckword = p_to_dw(diagram, h, v)
 		self.labels = labels
 		self.horizontal = h
 		self.vertical = v
 		if diagram:
-			self.fullv = [v - diagram[0]] + to_exp_nozero(diagram.conjugate())
-			self.fullh = [h - diagram.conjugate()[0]] + to_exp_nozero(diagram)
+			self.fullv = [v - self.diagram[0]] + to_exp_nozero(self.diagram.conjugate())
+			self.fullh = [h - self.diagram.conjugate()[0]] + to_exp_nozero(self.diagram)
 			self.fullh.reverse()
 		else:
 			self.fullh = [h]
@@ -42,48 +42,39 @@ class RationalPF:
 		g = gcd(h,v)
 		p = self.diagram
 		counter = 0
-		self.diagonal_reading = {i:[] for i in range(v)}
+		dr = {i:[] for i in range(v)}
 		if p:
 			for i in range(len(self.fullv)):
 				for j in range(self.fullv[i]):
 					try:
 						r[self.labels[i][j]] = counter
-						self.diagonal_reading[counter].append(self.labels[i][j])
+						dr[counter].append(self.labels[i][j])
 					except:
-						pass
+						#pass
+						dr[counter].append(None)
 					counter += h // g
 				counter -= (v // g) * self.fullh[i]
-			return r
+			return r, dr
 		else:
-			return dict([(i,i) for i in range(len(self.labels[0]))])
+			return dict([(i,i) for i in range(len(self.labels[0]))]), dr
 
 	def diagonal_reading(self):
-		try:
-			return self.diagonal_reading
-		except:
-			self.rank()
-			return self.diagonal_reading
+		return self.rank()[1]
 
 	def dr_set(self):
-		try:
-			t = []
-			for i in range(len(self.diagonal_reading)):
-				if self.diagonal_reading[i]:
-					t.append(frozenset(self.diagonal_reading[i]))
-			return tuple(t)
-		except:
-			self.rank()
-			t = []
-			for i in range(len(self.diagonal_reading)):
-				if self.diagonal_reading[i]:
-					t.append(frozenset(self.diagonal_reading[i]))
-			return tuple(t)
+		dr = self.diagonal_reading()
+		t = []
+		for i in range(len(dr)):
+			if dr[i]:
+				fr = frozenset(dr[i])
+				t.append(frozenset({fr,len(dr[i])-len(fr)}))
+		return tuple(t)
 
 	def labelling_permutation(self):
 		return Permutation([i for j in self.labels for i in j])
 
 	def dinv_pairs(self):
-		r = self.rank()
+		r = self.rank()[0]
 		w = self.labelling_permutation().inverse()
 		for i in w:
 			for j in w:
@@ -161,27 +152,36 @@ def rational_pf(h,v):
 				t = [sorted(i) for i in osp]
 				yield RationalPF(x, h, v, t)
 
+def weak_comp(n, k, outer, inner):
+	for y in IntegerVectors(n, k, outer = outer):
+		if all([y[i] > inner[i]-1 for i in range(k)]):
+			yield Composition(y)
+
 def rpf(n,k):
+	K = k*(n-k+1)
 	staircase = Partition([(k-i)*(n-k+1) for i in range(1,k)])
 	for m in range(staircase.size()+1):
 		for x in Partitions(m, outer = staircase):
 			if x:
-				vertical = [k*(n-k+1) - x[0]] + to_exp_nozero(x.conjugate())
+				vertical = [K - x[0]] + to_exp_nozero(x.conjugate())
+				vertical = vertical + [0]*(k-len(vertical))
 			else:
-				vertical = [k*(n-k+1)]
-			inside = [i-n+k for i in vertical if i-n+k > 0]
-			for y in Compositions(n, outer = vertical, inner = inside):
-				for osp in OrderedSetPartitions(n,y):
-					yield RationalPF(x, k, k*(n-k+1), [sorted(i) for i in osp])
-
+				vertical = [K] + [0]*(k-1)
+			inside = [max(i-n+k, 0) for i in vertical]
+			for y in weak_comp(n, k, vertical, inside):
+				for osp in OrderedSetPartitions(n, y):
+					yield RationalPF(x, k, K, [sorted(i) for i in osp])
 
 def test(n,k,a):
 	s = set()
 	d = dict()
+	R.<q> = QQ['q']
 	for pf in rpf(n,k):
 		if pf.area() == a:
 			fs = pf.dr_set()
 			s.add(fs)
-			d.setdefault(fs, [])
-			d[fs].append(pf)
+			# d.setdefault(fs, [])
+			# d[fs].append(pf)
+			d.setdefault(fs, 0)
+			d[fs] += q**(pf.dinv())
 	return d
