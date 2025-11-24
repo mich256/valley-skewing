@@ -21,6 +21,17 @@ def osp_to_markings(osp):
 		m += [0] + [1]*(len(s)-1)
 	return m
 
+def osp_to_marked_perm(osp):
+	w = osp_to_permutation(osp)
+	m = osp_to_markings(osp)
+	t = []
+	for i in range(len(w)):
+		if m[i] == 0:
+			t.append(w[i])
+		else:
+			t.append((w[i],'*'))
+	return t
+
 def perm_schedule(w):
 	n = w.size()
 	r = w.runs()

@@ -173,13 +173,11 @@ def rpf(n,k):
 					yield RationalPF(x, k, K, [sorted(i) for i in osp])
 
 def test(n,k,a):
-	s = set()
 	d = dict()
 	R.<q> = QQ['q']
 	for pf in rpf(n,k):
 		if pf.area() == a:
 			fs = pf.dr_set()
-			s.add(fs)
 			# d.setdefault(fs, [])
 			# d[fs].append(pf)
 			d.setdefault(fs, 0)

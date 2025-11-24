@@ -81,8 +81,8 @@ class MPF:
 				if counter not in self.mark:
 					dr[rank].append(w(counter))
 				else:
-					dr[rank].append(w(counter))
-					#dr[rank].append((w(counter),'*'))
+					#dr[rank].append(w(counter))
+					dr[rank].append((w(counter),'*'))
 				rank += 1
 				counter += 1
 			else:
@@ -94,16 +94,15 @@ class MPF:
 		t = []
 		for i in range(len(dr)):
 			if dr[i]:
-				t.append(set(dr[i]))
-		return OrderedSetPartition(t)
+				t.append(frozenset(dr[i]))
+		return tuple(t)
 
 	def pp(self):
 		self.pf.pretty_print()
 		print(self.marked_cars)
 
 	def __repr__(self):
-		self.pf.pretty_print()
-		return str(self.marked_cars)
+		return str(self.pf) + str(self.marked_cars)
 
 	def latex(self, aa = False, dd = False):
 		w = self.pf.to_labelling_permutation()
@@ -148,4 +147,14 @@ def valleyMPF(n,k):
 		for marks in Subsets(set(valleys(pf)),k):
 			yield MPF(pf,marks)
 
-
+def test_val(n,k,a):
+	d = dict()
+	R.<q> = QQ['q']
+	for pf in valleyMPF(n,n-k):
+		if pf.area() == a:
+			fs = pf.dr_set()
+			d.setdefault(fs, [])
+			d[fs].append(pf)
+			# d.setdefault(fs, 0)
+			# d[fs] += q**(pf.dinv())
+	return d
