@@ -67,7 +67,7 @@ class MPF:
 
 	def dinv(self):
 		if self.type == 'valley':
-			return len(self.dinv_pairs())
+			return len(self.dinv_pairs()) - len(self.mark)
 		else:
 			return self.pf.dinv()
 

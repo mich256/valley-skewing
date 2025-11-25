@@ -21,6 +21,7 @@ class RationalPF:
 		self.labels = labels
 		self.horizontal = h
 		self.vertical = v
+		self.slope = v/h
 		if diagram:
 			self.fullv = [v - self.diagram[0]] + to_exp_nozero(self.diagram.conjugate())
 			self.fullh = [h - self.diagram.conjugate()[0]] + to_exp_nozero(self.diagram)
@@ -34,6 +35,17 @@ class RationalPF:
 		v = self.vertical
 		staircase = Partition([floor((h-i)*v/h) for i in range(1,h)])
 		return SkewPartition([staircase, self.diagram]).size()
+
+	def pathdinv_boxes(self):
+		La = self.diagram
+		for (i,j) in La.cells():
+			a = La.arm_length(i,j)
+			l = La.leg_length(i,j)
+			if l/(a+1) <= self.slope and a/(l+1) < 1/self.slope:
+				yield (i,j)
+
+	def pathdinv(self):
+		return len(list(self.pathdinv_boxes()))
 
 	def rank(self):
 		r = {}
@@ -74,17 +86,30 @@ class RationalPF:
 		return Permutation([i for j in self.labels for i in j])
 
 	def dinv_pairs(self):
+		dinvs = []
+		attacks = []
 		r = self.rank()[0]
 		w = self.labelling_permutation().inverse()
 		for i in w:
 			for j in w:
-				if i < j and w(i) < w(j) and r[i] == r[j]:
-					yield (i,j)
-				if i < j and w(i) > w(j) and r[j] == r[i] + 1:
-					yield (i,j)
+				if i < j and r[i] == r[j]:
+					attacks.append((i,j))
+					if w(i) < w(j):
+						dinvs.append((i,j))
+				if i < j and r[j] == r[i] + 1:
+					attacks.append((i,j))
+					if w(i) > w(j):
+						dinvs.append((i,j))
+		return dinvs, attacks
+
+	def tdinv(self):
+		return len(self.dinv_pairs()[0])
+
+	def maxtdinv(self):
+		return len(self.dinv_pairs()[1])
 
 	def dinv(self):
-		return len(list(self.dinv_pairs()))
+		return self.pathdinv() + self.tdinv() - self.maxtdinv()
 
 	def trunc(self):
 		t = []
@@ -178,8 +203,20 @@ def test(n,k,a):
 	for pf in rpf(n,k):
 		if pf.area() == a:
 			fs = pf.dr_set()
-			# d.setdefault(fs, [])
-			# d[fs].append(pf)
-			d.setdefault(fs, 0)
-			d[fs] += q**(pf.dinv())
+			d.setdefault(fs, [])
+			d[fs].append(pf)
+			# d.setdefault(fs, 0)
+			# d[fs] += q**(pf.tdinv())
 	return d
+
+def fr_pp(tuple_of_frozensets):
+	for i in tuple_of_frozensets:
+		t = []
+		for j in i:
+			if type(j) == int:
+				if j > 0:
+					t += [None]*(j)
+			else:
+				t += list(j)
+		yield t
+
