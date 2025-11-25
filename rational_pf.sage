@@ -197,18 +197,6 @@ def rpf(n,k):
 				for osp in OrderedSetPartitions(n, y):
 					yield RationalPF(x, k, K, [sorted(i) for i in osp])
 
-def test(n,k,a):
-	d = dict()
-	R.<q> = QQ['q']
-	for pf in rpf(n,k):
-		if pf.area() == a:
-			fs = pf.dr_set()
-			d.setdefault(fs, [])
-			d[fs].append(pf)
-			# d.setdefault(fs, 0)
-			# d[fs] += q**(pf.tdinv())
-	return d
-
 def fr_pp(tuple_of_frozensets):
 	for i in tuple_of_frozensets:
 		t = []
@@ -220,3 +208,32 @@ def fr_pp(tuple_of_frozensets):
 				t += list(j)
 		yield t
 
+def latex_fs(list_of_fs):
+	s = ''
+	for i in list_of_fs:
+		counter = 0
+		for j in i:
+			if j:
+				s += str(j)
+			else:
+				counter += 1
+		s += '\\emptyset'*counter+'|'
+	return s[:-1]
+
+def test(n,k,a):
+	d = dict()
+	R.<q> = QQ['q']
+	for pf in rpf(n,k):
+		if pf.area() == a:
+			fs = pf.dr_set()
+			d.setdefault(fs, [])
+			d[fs].append(pf)
+			# d.setdefault(fs, 0)
+			# d[fs] += q**(pf.tdinv())
+	d2 = []
+	for fs in d.keys():
+		t = list(fr_pp(fs))
+		cc = sum([q**(pf.tdinv()) for pf in d[fs]])
+		d2.append((t, cc))
+		print(latex_fs(t) + ' &' + latex(cc) + ' \\\\ \\hline')
+	#return d, d2

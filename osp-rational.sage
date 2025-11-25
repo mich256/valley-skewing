@@ -1,3 +1,5 @@
+from sage.combinat.q_analogues import q_int
+
 def osp_to_permutation(osp):
 	m = 0
 	w = []
@@ -90,6 +92,9 @@ def osp_schedule(osp):
 		else:
 			sch[c-1] = len([i for i in runs[-1] if i < c and z[i] == 0]) + len([i for i in runs[-2] if i > c and z[i] == 0])
 	return sch
+
+def q_prod_schedule(osp):
+	return prod(q_int(i) for i in osp_schedule(osp))
 
 def minus_one_sch(osp):
 	return sum([max(i-1,0) for i in osp_schedule(osp)])
@@ -195,4 +200,18 @@ def maj_d(w,d):
 		elif j-i == d:
 			md += i
 	return md
+
+def latex_osp(marked_perm):
+	s = ''
+	for i in marked_perm:
+		if type(i) == int:
+			s += str(i)
+		else:
+			s += f'\\overset{{*}}{{{i[0]:d}}}'
+	return s
+
+def test_osp(n,k,a):
+	for osp in OrderedSetPartitions(n,k):
+		if osp_minimaj(osp) == a:
+			print(latex_osp(osp_to_marked_perm(osp)) +' &' + latex(q_prod_schedule(osp)) + ' \\\\ \\hline')
 
