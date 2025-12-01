@@ -97,6 +97,9 @@ class MPF:
 				t.append(frozenset(dr[i]))
 		return tuple(t)
 
+	def lowest_unmarked(self):
+		return frozenset(i for i in self.diagonal_reading()[0] if type(i) == int)
+
 	def pp(self):
 		self.pf.pretty_print()
 		print(self.marked_cars)
@@ -157,4 +160,14 @@ def test_val(n,k,a):
 			d[fs].append(pf)
 			# d.setdefault(fs, 0)
 			# d[fs] += q**(pf.dinv())
+	return d
+
+def lowest_unm(n,k,a):
+	d = dict()
+	R.<q> = QQ['q']
+	for pf in valleyMPF(n,k):
+		if pf.area() == a:
+			fs = pf.lowest_unmarked()
+			d.setdefault(fs, 0)
+			d[fs] += q**(pf.dinv())
 	return d

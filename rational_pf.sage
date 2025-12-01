@@ -73,6 +73,9 @@ class RationalPF:
 	def diagonal_reading(self):
 		return self.rank()[1]
 
+	def lowest(self):
+		return frozenset(self.diagonal_reading()[0])
+
 	def dr_set(self):
 		dr = self.diagonal_reading()
 		t = []
@@ -199,14 +202,15 @@ def rpf(n,k):
 
 def fr_pp(tuple_of_frozensets):
 	for i in tuple_of_frozensets:
-		t = []
 		for j in i:
 			if type(j) == int:
 				if j > 0:
-					t += [None]*(j)
+					tt = [None]*(j)
+				else:
+					tt = []
 			else:
-				t += list(j)
-		yield t
+				t = list(j)
+		yield tt + t
 
 def latex_fs(list_of_fs):
 	s = ''
@@ -235,5 +239,15 @@ def test(n,k,a):
 		t = list(fr_pp(fs))
 		cc = sum([q**(pf.tdinv()) for pf in d[fs]])
 		d2.append((t, cc))
-		print(latex_fs(t) + ' &' + latex(cc) + ' \\\\ \\hline')
-	#return d, d2
+		# print(latex_fs(t) + ' &' + latex(cc) + ' \\\\ \\hline')
+	return d, d2
+
+def lowest(n,k,a):
+	d = dict()
+	R.<q> = QQ['q']
+	for pf in rpf(n,k):
+		if pf.area() == a:
+			fs = pf.lowest()
+			d.setdefault(fs, 0)
+			d[fs] += q**(pf.tdinv())
+	return d
