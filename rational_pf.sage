@@ -55,20 +55,17 @@ class RationalPF:
 		p = self.diagram
 		counter = 0
 		dr = {i:[] for i in range(v)}
-		if p:
-			for i in range(len(self.fullv)):
-				for j in range(self.fullv[i]):
-					try:
-						r[self.labels[i][j]] = counter
-						dr[counter].append(self.labels[i][j])
-					except:
-						#pass
-						dr[counter].append(None)
-					counter += h // g
-				counter -= (v // g) * self.fullh[i]
-			return r, dr
-		else:
-			return dict([(i,i) for i in range(len(self.labels[0]))]), dr
+		for i in range(len(self.fullv)):
+			for j in range(self.fullv[i]):
+				try:
+					r[self.labels[i][j]] = counter
+					dr[counter].append(self.labels[i][j])
+				except:
+					#pass
+					dr[counter].append(None)
+				counter += h // g
+			counter -= (v // g) * self.fullh[i]
+		return r, dr
 
 	def diagonal_reading(self):
 		return self.rank()[1]
