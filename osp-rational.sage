@@ -201,7 +201,8 @@ def maj_d(w,d):
 			md += i
 	return md
 
-def latex_osp(marked_perm):
+def latex_osp(osp):
+	marked_perm = osp_to_marked_perm(osp)
 	s = ''
 	for i in marked_perm:
 		if type(i) == int:
@@ -215,7 +216,24 @@ def test_osp(n,k,a):
 	print('\\begin{array}{|c|c|}\\hline')
 	for osp in OrderedSetPartitions(n,k):
 		if osp_minimaj(osp) == a:
-			d[tuple(osp_to_marked_perm(osp))] = factor(q_prod_schedule(osp))
-			print(latex_osp(osp_to_marked_perm(osp)) +' &' + latex(q_prod_schedule(osp)) + ' \\\\ \\hline')
+			d[tuple(osp_to_marked_perm(osp))] = q_prod_schedule(osp)
+			print(latex_osp(osp_to_marked_perm(osp)) +' & ' + ','.join(str(x) for x in osp_schedule(osp)) + ' \\\\ \\hline')
 	print('\\end{array}')
+	return d
+
+def osp_pp(osp):
+	s = ''
+	for l in osp:
+		s += ''.join(str(i) for i in l)+'|'
+	return s[:-1]
+
+def osp_table(n,k,a):
+	d = {}
+	for osp in OrderedSetPartitions(n,k):
+		w = osp_to_permutation(osp)
+		if osp_minimaj(osp) == a:
+			fs = [i for i in w.runs()[-1] if osp_to_markings(osp)[w.inverse()(i)-1] != 1]
+			fs = frozenset(fs)
+			d.setdefault(fs,[])
+			d[fs].append(osp)
 	return d

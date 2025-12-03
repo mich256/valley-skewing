@@ -80,7 +80,7 @@ class RationalPF:
 			if dr[i]:
 				fr = frozenset(dr[i])
 				t.append(frozenset({fr,len(dr[i])-len(fr)}))
-		return tuple(t)
+		return tuple(reversed(t))
 
 	def labelling_permutation(self):
 		return Permutation([i for j in self.labels for i in j])
@@ -209,7 +209,8 @@ def fr_pp(tuple_of_frozensets):
 				t = list(j)
 		yield tt + t
 
-def latex_fs(list_of_fs):
+def latex_fs(fs):
+	list_of_fs = list(fr_pp(fs))
 	s = ''
 	for i in list_of_fs:
 		counter = 0
@@ -251,8 +252,51 @@ def lowest(n,k,a):
 			d[fs] += q**(pf.tdinv())
 	return d
 
-load('osp-rational.sage')
 def test_function(n):
+	load('mpf.sage')
 	for k in range(1,n):
 		for a in range(binomial(n,2)-binomial(k+1,2)):
 			assert lowest_unm(n,k,a) == lowest(n,n-k,a)
+
+def rpf_table(n,k,a):
+	d = {}
+	for pf in rpf(n,k):
+		if pf.area() == a:
+			fs = pf.lowest()
+			d.setdefault(fs,set())
+			d[fs].add(pf.dr_set())
+	return d
+
+def comparison_table(n,k,a):
+	load('osp-rational.sage')
+	d1 = osp_table(n,k,a)
+	d2 = rpf_table(n,k,a)
+	print('\\begin{table}[H]\n\\[')
+	print('\\begin{array}{|c|c|c|}\\hline')
+	for key in d1.keys():
+		for i in range(max(len(d1[key]),len(d2[key]))):
+			assert len(d1[key]) == len(d2[key])
+			d2[key] = list(d2[key])
+			if i == 0:
+			 	print(''.join(str(i) for i in sorted(key))+ ' & '
+				+ latex_osp(d1[key][i]) + ' & ' + latex_fs(d2[key][i])
+				+' \\\\ \\hline')
+			else:
+				s = ' &'
+				try:
+					s += latex_osp(d1[key][i])
+				except:
+					pass
+				s += ' & '
+				try:
+					s += latex_fs(d2[key][i])
+				except:
+					pass
+				s += ' \\\\ \\hline'
+				print(s)
+	print('\\end{array}')
+	print('\\]')
+	print(f'\\caption{{$n={n}, k={k}, a={a}$.}}')
+	print('\\end{table}')
+
+		
