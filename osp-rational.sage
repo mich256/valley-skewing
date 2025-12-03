@@ -211,7 +211,11 @@ def latex_osp(marked_perm):
 	return s
 
 def test_osp(n,k,a):
+	d = {}
+	print('\\begin{array}{|c|c|}\\hline')
 	for osp in OrderedSetPartitions(n,k):
 		if osp_minimaj(osp) == a:
+			d[tuple(osp_to_marked_perm(osp))] = factor(q_prod_schedule(osp))
 			print(latex_osp(osp_to_marked_perm(osp)) +' &' + latex(q_prod_schedule(osp)) + ' \\\\ \\hline')
-
+	print('\\end{array}')
+	return d

@@ -224,6 +224,7 @@ def latex_fs(list_of_fs):
 def test(n,k,a):
 	d = dict()
 	R.<q> = QQ['q']
+	print('\\begin{array}{|c|c|}\\hline')
 	for pf in rpf(n,k):
 		if pf.area() == a:
 			fs = pf.dr_set()
@@ -236,7 +237,8 @@ def test(n,k,a):
 		t = list(fr_pp(fs))
 		cc = sum([q**(pf.tdinv()) for pf in d[fs]])
 		d2.append((t, cc))
-		# print(latex_fs(t) + ' &' + latex(cc) + ' \\\\ \\hline')
+		print(latex_fs(t) + ' &' + latex(factor(cc)) + ' \\\\ \\hline')
+	print('\\end{array}')
 	return d, d2
 
 def lowest(n,k,a):
@@ -248,3 +250,9 @@ def lowest(n,k,a):
 			d.setdefault(fs, 0)
 			d[fs] += q**(pf.tdinv())
 	return d
+
+load('osp-rational.sage')
+def test_function(n):
+	for k in range(1,n):
+		for a in range(binomial(n,2)-binomial(k+1,2)):
+			assert lowest_unm(n,k,a) == lowest(n,n-k,a)
