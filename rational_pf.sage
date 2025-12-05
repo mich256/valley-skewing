@@ -163,7 +163,7 @@ class RationalPF:
 			i += self.fullh[k]
 			s += f'--({i:d},{j:d})'
 		s += ';\n'
-		print(s + m + '\\end{tikzpicture}')
+		return s + m + '\\end{tikzpicture}\n'
 
 def rational_pf(h,v):
 	staircase = Partition([floor((h-i)*v/h) for i in range(1,h)])
@@ -238,7 +238,7 @@ def test(n,k,a):
 		t = list(fr_pp(fs))
 		cc = sum([q**(pf.tdinv()) for pf in d[fs]])
 		d2.append((t, cc))
-		print(latex_fs(t) + ' &' + latex(factor(cc)) + ' \\\\ \\hline')
+		print(latex_fs(fs) + ' &' + latex(factor(cc)) + ' \\\\ \\hline')
 	print('\\end{array}')
 	return d, d2
 
