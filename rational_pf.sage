@@ -14,6 +14,31 @@ def p_to_dw(p, h, v):
 	else:
 		return [1]*v+[0]*h
 
+def fr_pp(tuple_of_frozensets):
+	for i in tuple_of_frozensets:
+		for j in i:
+			if type(j) == int:
+				if j > 0:
+					tt = [None]*(j)
+				else:
+					tt = []
+			else:
+				t = list(j)
+		yield tt + t
+
+def latex_fs(fs):
+	list_of_fs = list(fr_pp(fs))
+	s = ''
+	for i in list_of_fs:
+		counter = 0
+		for j in i:
+			if j:
+				s += str(j)
+			else:
+				counter += 1
+		s += '\\emptyset'*counter+'|'
+	return s[:-1]
+
 class RationalPF:
 	def __init__(self, diagram, h, v, labels):
 		self.diagram = Partition(diagram)
@@ -163,7 +188,8 @@ class RationalPF:
 			i += self.fullh[k]
 			s += f'--({i:d},{j:d})'
 		s += ';\n'
-		return s + m + '\\end{tikzpicture}\n'
+		m += f'\\node at ({float(self.horizontal/2):.1f}, -0.5) {{${latex_fs(self.dr_set())}$}};\n'
+		return s + m + '\\end{tikzpicture}'
 
 def rational_pf(h,v):
 	staircase = Partition([floor((h-i)*v/h) for i in range(1,h)])
@@ -196,31 +222,6 @@ def rpf(n,k):
 			for y in weak_comp(n, k, vertical, inside):
 				for osp in OrderedSetPartitions(n, y):
 					yield RationalPF(x, k, K, [sorted(i) for i in osp])
-
-def fr_pp(tuple_of_frozensets):
-	for i in tuple_of_frozensets:
-		for j in i:
-			if type(j) == int:
-				if j > 0:
-					tt = [None]*(j)
-				else:
-					tt = []
-			else:
-				t = list(j)
-		yield tt + t
-
-def latex_fs(fs):
-	list_of_fs = list(fr_pp(fs))
-	s = ''
-	for i in list_of_fs:
-		counter = 0
-		for j in i:
-			if j:
-				s += str(j)
-			else:
-				counter += 1
-		s += '\\emptyset'*counter+'|'
-	return s[:-1]
 
 def test(n,k,a):
 	d = dict()
@@ -272,19 +273,21 @@ def comparison_table(n,k,a):
 	d1 = osp_table(n,k,a)
 	d2 = rpf_table(n,k,a)
 	print('\\begin{table}[H]\n\\[')
-	print('\\begin{array}{|c|c|c|}\\hline')
+	print('\\begin{array}{|c|c|c|c|}\\hline')
 	for key in d1.keys():
 		for i in range(max(len(d1[key]),len(d2[key]))):
 			assert len(d1[key]) == len(d2[key])
 			d2[key] = list(d2[key])
 			if i == 0:
 			 	print(''.join(str(i) for i in sorted(key))+ ' & '
-				+ latex_osp(d1[key][i]) + ' & ' + latex_fs(d2[key][i])
-				+' \\\\ \\hline')
+				+ latex_osp(d1[key][i]) + ' & ' + latex(factor(q_prod_schedule(d1[key][i]))) +
+				 ' & ' + latex_fs(d2[key][i])
+				+' \\\\')
 			else:
 				s = ' &'
 				try:
 					s += latex_osp(d1[key][i])
+					s += ' & ' + latex(factor(q_prod_schedule(d1[key][i])))
 				except:
 					pass
 				s += ' & '
@@ -292,8 +295,9 @@ def comparison_table(n,k,a):
 					s += latex_fs(d2[key][i])
 				except:
 					pass
-				s += ' \\\\ \\hline'
+				s += ' \\\\'
 				print(s)
+		print('\\hline')
 	print('\\end{array}')
 	print('\\]')
 	print(f'\\caption{{$n={n}, k={k}, a={a}$.}}')

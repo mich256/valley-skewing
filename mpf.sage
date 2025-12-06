@@ -17,6 +17,15 @@ def valleys(pf):
 			if dw[i-2] == 0:
 				yield s
 
+def latex_mp(mp):
+	s = ''
+	for i in mp:
+		if type(i) == int:
+			s += str(i)
+		else:
+			s += f'\\overset{{*}}{{{i[0]:d}}}'
+	return s
+
 class MPF:
 	def __init__(self, pf, mark):
 		self.pf = pf
@@ -97,6 +106,22 @@ class MPF:
 				t.append(frozenset(dr[i]))
 		return tuple(t)
 
+	def marked_perm(self):
+		t = []
+		for diag in self.dr_set()[::-1]:
+			temp = []
+			for j in diag:
+				if type(j) == int:
+					temp.append(j)
+				else:
+					temp.append(j[0])
+			temp.sort()
+			for j in range(len(temp)):
+				if temp[j] in self.marked_cars:
+					temp[j] = (temp[j],'*')
+			t += temp
+		return t
+
 	def lowest_unmarked(self):
 		return frozenset(i for i in self.diagonal_reading()[0] if type(i) == int)
 
@@ -128,6 +153,7 @@ class MPF:
 			if dw[i] == 0:
 				c1 += 1
 			res += '--({},{})'.format(c1, c2)
+		mark += f"\\node at ({float(n/2):.1f},-0.5) {{${latex_mp(self.marked_perm())}$}};\n"
 		if aa:
 			if self.type == 'rise':
 				stats += f'\\draw node at (1,-.5) {{area-: {self.area():d}}};\n'
@@ -138,7 +164,7 @@ class MPF:
 				stats += f'\\draw node at (1,-1.5) {{dinv-: {self.dinv():d}}};\n'
 			else:
 				stats += f'\\draw node at (1,-1.5) {{dinv: {self.dinv():d}}};\n'
-		print(res + ';\n' + label + mark + stats + '\\end{tikzpicture}')
+		return res + ';\n' + label + mark + stats + '\\end{tikzpicture}'
 
 def riseMPF(n,k):
 	for pf in ParkingFunctions(n):
