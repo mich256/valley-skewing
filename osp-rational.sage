@@ -106,6 +106,9 @@ def gale_compare(l1, l2):
 def mosp_to_composition(m):
 	return Composition([len(j) for j in m])
 
+def partial_sums(l):
+	return [sum(l[:i+1]) for i in range(len(l))]
+
 def double_ranks(dw):
 	vertical_rank = []
 	horizontal_rank = []
@@ -238,13 +241,13 @@ class StackedPF:
 				ps += len(self.label[i])
 			except:
 				pass
-			ps += n-k-len(self.stack[i])+1
+			ps += n-k-self.stack[i]+1
 			par.append(v-ps)
-		return RationalPF(par, h, v, self.labels)
+		return RationalPF(par, h, v, [sorted(i) for i in self.label])
 
 def stdstackpf(n,k):
 	for m in Compositions(n, min_length = k, max_length = k):
-		for mm in Compositions(n, max_length = k):
+		for mm in IntegerVectors(n, k):
 			if gale_compare(mm.partial_sums(), m.partial_sums()):
 				for osp in OrderedSetPartitions(n, mm):
 					yield StackedPF(m, osp)
@@ -252,8 +255,8 @@ def stdstackpf(n,k):
 def stdstackpfn(n):
 	for m in Compositions(n):
 		k = len(m)
-		for mm in Compositions(n, max_length = k):
-			if gale_compare(mm.partial_sums(), m.partial_sums()):
+		for mm in IntegerVectors(n, k):
+			if gale_compare(partial_sums(mm), m.partial_sums()):
 				for osp in OrderedSetPartitions(n, mm):
 					yield StackedPF(m, osp)
 
