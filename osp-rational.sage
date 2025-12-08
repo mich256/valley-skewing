@@ -1,8 +1,5 @@
 from sage.combinat.q_analogues import q_int
 
-load('rational_pf.sage')
-load('mpf.sage')
-
 def osp_to_permutation(osp):
 	m = 0
 	w = []
@@ -106,10 +103,10 @@ def gale_compare(l1, l2):
 	return all([l1[i] >= l2[i] for i in range(min(len(l1),len(l2)))])
 
 def mosp_to_composition(m):
-	return [len(j) for j in m]
+	return Composition([len(j) for j in m])
 
-def partial_sums(m):
-	return [sum(m[:i+1]) for i in range(len(m))]
+# def partial_sums(m):
+# 	return [sum(m[:i+1]) for i in range(len(m))]
 
 class StackedPF:
 	def __init__(self, stack, label):
@@ -122,7 +119,7 @@ class StackedPF:
 	def area(self):
 		m = self.stack
 		n = m.size()
-		mm = partial_sums(mosp_to_composition(self.label)) + [n]*(len(self.stack) - len(self.label))
+		mm = mosp_to_composition(self.label).partial_sums() + [n]*(len(self.stack) - len(self.label))
 		return SkewPartition([mm[::-1], m.partial_sums()[::-1]]).column_lengths()
 
 	def height(self):
@@ -173,20 +170,28 @@ class StackedPF:
 		SkewPartition([m.partial_sums()[::-1], m.partial_sums()[::-1][1:]]).pp()
 		Tableau(l).pp()
 
-	def marked_cars(self):
+	def valley_mark(self):
+		n = set(range(1,self.stack.size()+1)) 
+		s = [1]+[i+1 for i in self.stack.partial_sums()]
+		return n - set(s)
+
+	def rise_mark(self):
 		return
 
 	def rise(self):
+		load('mpf.sage')
 		w = Permutation([j for i in self.label for j in sorted(i)])
 		pf = ParkingFunction(labelling = w, area_sequence = self.height())
 		return pf
 
 	def valley(self):
+		load('mpf.sage')
 		w = Permutation([j for i in self.label for j in sorted(i)])
 		pf = ParkingFunction(labelling = w, area_sequence = self.area())
-		return pf
+		return MPF(pf, self.valley_mark())
 
 	def rpf(self):
+		load('rational_pf.sage')
 		k = len(self.stack)
 		n = self.stack.size()
 		h = k

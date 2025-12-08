@@ -1,5 +1,3 @@
-load('osp-rational.sage')
-
 def to_exp_nozero(p):
 	return [i for i in p.to_exp() if i != 0]
 
@@ -58,6 +56,7 @@ class RationalPF:
 			self.fullv = [v]
 
 	def spf(self):
+		load('osp-rational.sage')
 		k = self.horizontal
 		n = self.vertical//k -1 + k
 		p = self.diagram
