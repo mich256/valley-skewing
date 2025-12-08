@@ -143,13 +143,34 @@ class StackedPF:
 	def __init__(self, stack, label):
 		self.stack = Composition(stack)
 		self.label = label
+		self.n = self.stack.size()
+		self.k = len(self.stack)
 
 	def __repr__(self):
 		return str(self.stack) + str(self.label)
 
+	def latex(self):
+		s = '\\begin{tikzpicture}[scale=0.5]\n'
+		s += '\\sq{0}{0};\n'
+		ps = 0
+		for i in range(self.k):
+			for j in range(self.stack[i]):
+				s += f'\\sq{{{i:d}}}{{{ps:d}}};\n'
+				ps += 1
+		s += f'\\draw (0,0) grid ({self.k:d}, {self.n:d});\n'
+		inc = 0.5
+		ps = 0
+		for i in range(len(self.label)):
+			t = sorted(self.label[i])
+			for j in range(len(t)):
+				s += f'\\node at ({i+inc:.1f},{ps+inc:.1f}) {{{t[j]:d}}};\n'
+				ps += 1
+		s += '\\end{tikzpicture}'
+		return s
+
 	def area(self):
 		m = self.stack
-		n = m.size()
+		n = self.n
 		mm = mosp_to_composition(self.label).partial_sums() + [n]*(len(self.stack) - len(self.label))
 		return SkewPartition([mm[::-1], m.partial_sums()[::-1]]).column_lengths()
 
@@ -230,8 +251,8 @@ class StackedPF:
 
 	def rpf(self):
 		load('rational_pf.sage')
-		k = len(self.stack)
-		n = self.stack.size()
+		k = self.k
+		n = self.n
 		h = k
 		v = k * (n-k+1)
 		ps = 0
@@ -248,6 +269,7 @@ class StackedPF:
 def stdstackpf(n,k):
 	for m in Compositions(n, min_length = k, max_length = k):
 		for mm in IntegerVectors(n, k):
+			mm = Composition(mm)
 			if gale_compare(mm.partial_sums(), m.partial_sums()):
 				for osp in OrderedSetPartitions(n, mm):
 					yield StackedPF(m, osp)

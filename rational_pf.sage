@@ -60,9 +60,19 @@ class RationalPF:
 		k = self.horizontal
 		n = self.vertical//k -1 + k
 		p = self.diagram
-		stack = [self.vertical - p[0]] + to_exp_nozero(p.conjugate())
-		for i in range(k):
-			stack = n-k+1-(stack[i]-len(self.labels[i]))
+		if p:
+			stack = [self.vertical-p[0]]
+			for i in range(k-1):
+				if i < len(p)-1:
+					stack.append(p[i] - p[i+1])
+				elif i == len(p)-1:
+					stack.append(p[i])
+				else:
+					stack.append(0)
+			for i in range(k):
+				stack[i] = n-k+1-(stack[i]-len(self.labels[i]))
+		else:
+			stack = [self.vertical-n] + [n-k+1]*(k-1)
 		return StackedPF(stack, self.labels)
 
 	def area(self):
