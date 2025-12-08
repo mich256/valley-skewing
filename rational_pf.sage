@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 def to_exp_nozero(p):
 	return [i for i in p.to_exp() if i != 0]
 
@@ -264,14 +266,15 @@ def test(n,k,a):
 	return d, d2
 
 def lowest(n,k,a):
-	d = dict()
+	d1 = defaultdict(list)
+	d2 = defaultdict(int)
 	R.<q> = QQ['q']
 	for pf in rpf(n,k):
 		if pf.area() == a:
 			fs = pf.lowest()
-			d.setdefault(fs, 0)
-			d[fs] += q**(pf.tdinv())
-	return d
+			d1[fs].append(pf)
+			d2[fs] += q**(pf.tdinv())
+	return dict(d1),dict(d2)
 
 def test_function(n):
 	load('mpf.sage')
