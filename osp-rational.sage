@@ -1,5 +1,8 @@
 from sage.combinat.q_analogues import q_int
 
+load('rational_pf.sage')
+load('mpf.sage')
+
 def osp_to_permutation(osp):
 	m = 0
 	w = []
@@ -170,11 +173,34 @@ class StackedPF:
 		SkewPartition([m.partial_sums()[::-1], m.partial_sums()[::-1][1:]]).pp()
 		Tableau(l).pp()
 
+	def marked_cars(self):
+		return
+
 	def rise(self):
-		return ParkingFunction(labelling = [j for i in self.label for j in sorted(i)], area_sequence = self.height())
+		w = Permutation([j for i in self.label for j in sorted(i)])
+		pf = ParkingFunction(labelling = w, area_sequence = self.height())
+		return pf
 
 	def valley(self):
-		return ParkingFunction(labelling = [j for i in self.label for j in sorted(i)], area_sequence = self.area())
+		w = Permutation([j for i in self.label for j in sorted(i)])
+		pf = ParkingFunction(labelling = w, area_sequence = self.area())
+		return pf
+
+	def rpf(self):
+		k = len(self.stack)
+		n = self.stack.size()
+		h = k
+		v = k * (n-k+1)
+		ps = 0
+		par = []
+		for i in range(k):
+			try:
+				ps += len(self.label[i])
+			except:
+				pass
+			ps += n-k-len(self.stack[i])+1
+			par.append(v-ps)
+		return RationalPF(par, h, v, self.labels)
 
 def stdstackpf(n,k):
 	for m in Compositions(n, min_length = k, max_length = k):
