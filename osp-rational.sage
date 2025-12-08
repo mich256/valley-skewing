@@ -1,4 +1,5 @@
 from sage.combinat.q_analogues import q_int
+from collections import defaultdict
 
 def osp_to_permutation(osp):
 	m = 0
@@ -105,8 +106,35 @@ def gale_compare(l1, l2):
 def mosp_to_composition(m):
 	return Composition([len(j) for j in m])
 
-# def partial_sums(m):
-# 	return [sum(m[:i+1]) for i in range(len(m))]
+def double_ranks(dw):
+	vertical_rank = []
+	horizontal_rank = []
+	r = 0
+	for i in dw:
+		if i == 1:
+			vertical_rank.append(r)
+			r += 1
+		else:
+			r -=1
+			horizontal_rank.append(r)
+	vr = defaultdict(list)
+	for i, x in enumerate(vertical_rank):
+		vr[x].append(i)
+	vr = dict(vr)
+	hr = defaultdict(list)
+	for i, x in enumerate(horizontal_rank):
+		hr[x].append(i)
+	hr = dict(hr)
+	return vr, hr
+
+def fall_to_rise(dw):
+	vr, hr = double_ranks(dw)
+	n = dw.semilength()
+	h_to_v = [None]*n
+	for r in hr.keys():
+		for i in range(len(hr[r])):
+			h_to_v[hr[r][::-1][i]] = vr[r][i]
+	return h_to_v
 
 class StackedPF:
 	def __init__(self, stack, label):
@@ -162,7 +190,7 @@ class StackedPF:
 	def pp(self):
 		m = self.stack
 		osp = self.label
-		mm = partial_sums(mosp_to_composition(self.label))
+		mm = mosp_to_composition(self.label).partial_sums()
 		l = [sorted(osp[0])]
 		for i in range(len(mm)-1):
 			l.append([' ']*mm[i]+sorted(osp[i+1]))
@@ -175,14 +203,21 @@ class StackedPF:
 		s = [1]+[i+1 for i in self.stack.partial_sums()]
 		return n - set(s)
 
-	def rise_mark(self):
-		return
+	def fall_mark(self):
+		fall = []
+		ps = 0
+		for i in range(len(self.stack)):
+			fall += [ps+i for i in range(self.stack[i]-1)]
+			ps += self.stack[i]
+		return fall
 
 	def rise(self):
 		load('mpf.sage')
 		w = Permutation([j for i in self.label for j in sorted(i)])
 		pf = ParkingFunction(labelling = w, area_sequence = self.height())
-		return pf
+		dw = pf.to_dyck_word()
+		rise_mark = [fall_to_rise(dw)[i]+1 for i in self.fall_mark()]
+		return MPF(pf, rise_mark)
 
 	def valley(self):
 		load('mpf.sage')
