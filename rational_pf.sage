@@ -1,3 +1,5 @@
+load('osp-rational.sage')
+
 def to_exp_nozero(p):
 	return [i for i in p.to_exp() if i != 0]
 
@@ -54,6 +56,15 @@ class RationalPF:
 		else:
 			self.fullh = [h]
 			self.fullv = [v]
+
+	def spf(self):
+		k = self.horizontal
+		n = self.vertical//k -1 + k
+		p = self.diagram
+		stack = [self.vertical - p[0]] + to_exp_nozero(p.conjugate())
+		for i in range(k):
+			stack = n-k+1-(stack[i]-len(self.labels[i]))
+		return StackedPF(stack, self.labels)
 
 	def area(self):
 		h = self.horizontal
