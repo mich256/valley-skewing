@@ -299,17 +299,17 @@ def comparison_table(n,k,a):
 	print('\\begin{array}{|c|c|c|c|}\\hline')
 	for key in d1.keys():
 		for i in range(max(len(d1[key]),len(d2[key]))):
-			assert len(d1[key]) == len(d2[key])
+			# assert len(d1[key]) == len(d2[key])
 			d2[key] = list(d2[key])
 			if i == 0:
 			 	print(''.join(str(i) for i in sorted(key))+ ' & '
-				+ latex_osp(d1[key][i]) + ' & ' + latex(factor(q_prod_schedule(d1[key][i]))) +
+				+ osp_pp(d1[key][i]) + ' & ' + latex(factor(q_prod_schedule(d1[key][i]))) +
 				 ' & ' + latex_fs(d2[key][i])
 				+' \\\\')
 			else:
 				s = ' &'
 				try:
-					s += latex_osp(d1[key][i])
+					s += osp_pp(d1[key][i])
 					s += ' & ' + latex(factor(q_prod_schedule(d1[key][i])))
 				except:
 					pass

@@ -104,7 +104,7 @@ def gale_compare(l1, l2):
 	return all([l1[i] >= l2[i] for i in range(min(len(l1),len(l2)))])
 
 def mosp_to_composition(m):
-	return Composition([len(j) for j in m])
+	return [len(j) for j in m]
 
 def partial_sums(l):
 	return [sum(l[:i+1]) for i in range(len(l))]
@@ -149,29 +149,10 @@ class StackedPF:
 	def __repr__(self):
 		return str(self.stack) + str(self.label)
 
-	def latex(self):
-		s = '\\begin{tikzpicture}[scale=0.5]\n'
-		s += '\\sq{0}{0};\n'
-		ps = 0
-		for i in range(self.k):
-			for j in range(self.stack[i]):
-				s += f'\\sq{{{i:d}}}{{{ps:d}}};\n'
-				ps += 1
-		s += f'\\draw (0,0) grid ({self.k:d}, {self.n:d});\n'
-		inc = 0.5
-		ps = 0
-		for i in range(len(self.label)):
-			t = sorted(self.label[i])
-			for j in range(len(t)):
-				s += f'\\node at ({i+inc:.1f},{ps+inc:.1f}) {{{t[j]:d}}};\n'
-				ps += 1
-		s += '\\end{tikzpicture}'
-		return s
-
 	def area(self):
 		m = self.stack
 		n = self.n
-		mm = mosp_to_composition(self.label).partial_sums() + [n]*(len(self.stack) - len(self.label))
+		mm = partial_sums(mosp_to_composition(self.label)) + [n]*(len(self.stack) - len(self.label))
 		return SkewPartition([mm[::-1], m.partial_sums()[::-1]]).column_lengths()
 
 	def height(self):
@@ -188,6 +169,14 @@ class StackedPF:
 			except:
 				continue
 		return temp
+
+	def lowest_unm(self):
+		m = self.stack.partial_sums()
+		mm = partial_sums(mosp_to_composition(self.label))
+		yield min(self.label[0])
+		for i in range(self.k-1):
+			if m[i] == mm[i]:
+				yield min(self.label[i+1])
 
 	def hdinv(self):
 		pairs = []
@@ -211,10 +200,33 @@ class StackedPF:
 					pairs.append((i,j))
 		return len(pairs) - len(l) + len(self.stack)
 
+	def latex(self, aa = False, wd = False, hd = False):
+		s = '\\begin{tikzpicture}[scale=0.5]\n'
+		s += '\\sq{0}{0};\n'
+		ps = 0
+		for i in range(self.k):
+			for j in range(self.stack[i]):
+				s += f'\\sq{{{i:d}}}{{{ps:d}}};\n'
+				ps += 1
+		s += f'\\draw (0,0) grid ({self.k:d}, {self.n:d});\n'
+		inc = 0.5
+		ps = 0
+		for i in range(len(self.label)):
+			t = sorted(self.label[i])
+			for j in range(len(t)):
+				s += f'\\node at ({i+inc:.1f},{ps+inc:.1f}) {{{t[j]:d}}};\n'
+				ps += 1
+		if aa:
+			s += f"\\node at ({float(self.k/2):.1f}, -{0.5}) {{area = {sum(self.area()):d}}};\n"
+		if wd:
+			s += f"\\node at ({float(self.k/2):.1f}, -{1}) {{wdinv = {self.wdinv():d}}};\n"
+		s += '\\end{tikzpicture}'
+		return s
+
 	def pp(self):
 		m = self.stack
 		osp = self.label
-		mm = mosp_to_composition(self.label).partial_sums()
+		mm = partial_sums(mosp_to_composition(self.label))
 		l = [sorted(osp[0])]
 		for i in range(len(mm)-1):
 			l.append([' ']*mm[i]+sorted(osp[i+1]))
@@ -293,8 +305,8 @@ def maj_d(w,d):
 	return md
 
 def latex_osp(osp):
-	marked_perm = osp_to_marked_perm(osp)
 	s = ''
+	marked_perm = osp_to_marked_perm(osp)
 	for i in marked_perm:
 		if type(i) == int:
 			s += str(i)
@@ -302,21 +314,21 @@ def latex_osp(osp):
 			s += f'\\overset{{*}}{{{i[0]:d}}}'
 	return s
 
-def test_osp(n,k,a):
-	d = {}
-	print('\\begin{array}{|c|c|}\\hline')
-	for osp in OrderedSetPartitions(n,k):
-		if osp_minimaj(osp) == a:
-			d[tuple(osp_to_marked_perm(osp))] = q_prod_schedule(osp)
-			print(latex_osp(osp_to_marked_perm(osp)) +' & ' + ','.join(str(x) for x in osp_schedule(osp)) + ' \\\\ \\hline')
-	print('\\end{array}')
-	return d
-
 def osp_pp(osp):
 	s = ''
 	for l in osp:
 		s += ''.join(str(i) for i in l)+'|'
 	return s[:-1]
+
+def test_osp(n,k,a):
+	d = {}
+	print('\\begin{array}{|c|c|}\\hline')
+	for osp in OrderedSetPartitions(n,k):
+		if osp_minimaj(osp) == a:
+			d[osp] = q_prod_schedule(osp)
+			print(osp_pp(osp) +' & ' + latex(d[osp]) + ' \\\\ \\hline')
+	print('\\end{array}')
+	return d
 
 def osp_table(n,k,a):
 	d = {}
