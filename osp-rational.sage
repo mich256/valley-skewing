@@ -149,6 +149,29 @@ class StackedPF:
 	def __repr__(self):
 		return str(self.stack) + str(self.label)
 
+	def rm_max(self):
+		m = -1
+		ps = 0
+		pm = 0
+		for i in range(self.k):
+			for j in self.label[i]:
+				if j > m:
+					m = j
+					pm = ps
+				ps += 1
+		new_label = [i-{m} for i in self.label]
+		t = [0] + self.stack.partial_sums()
+		new_stack = []
+		for i in range(self.k):
+			if t[i] <= pm and pm < t[i+1]:
+				if self.stack[i] > 1:
+					new_stack.append(self.stack[i]-1)
+				else:
+					del new_label[i]
+			else:
+				new_stack.append(self.stack[i])
+		return StackedPF(new_stack,new_label)
+
 	def area(self):
 		m = self.stack
 		n = self.n
@@ -171,12 +194,14 @@ class StackedPF:
 		return temp
 
 	def lowest_unm(self):
+		t = set()
 		m = self.stack.partial_sums()
 		mm = partial_sums(mosp_to_composition(self.label))
-		yield min(self.label[0])
+		t.add(min(self.label[0]))
 		for i in range(self.k-1):
 			if m[i] == mm[i]:
-				yield min(self.label[i+1])
+				t.add(min(self.label[i+1]))
+		return t
 
 	def hdinv(self):
 		pairs = []
