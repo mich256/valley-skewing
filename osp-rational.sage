@@ -172,6 +172,21 @@ class StackedPF:
 				new_stack.append(self.stack[i])
 		return StackedPF(new_stack,new_label)
 
+	def remove(self,x):
+		new_stack = []
+		new_label = []
+		for i in range(self.k):
+			if x in self.label[i]:
+				new_label.append(self.label[i]-{x})
+				if self.stack[i] > 1:
+					new_stack.append(self.stack[i]-1)
+				else:
+					return
+			else:
+				new_label.append(self.label[i])
+				new_stack.append(self.stack[i])
+		return StackedPF(new_stack, new_label)
+
 	def area(self):
 		m = self.stack
 		n = self.n
