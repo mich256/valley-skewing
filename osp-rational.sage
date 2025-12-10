@@ -260,6 +260,8 @@ class StackedPF:
 			s += f"\\node at ({float(self.k/2):.1f}, -{0.5}) {{area = {sum(self.area()):d}}};\n"
 		if wd:
 			s += f"\\node at ({float(self.k/2):.1f}, -{1}) {{wdinv = {self.wdinv():d}}};\n"
+		if hd:
+			s += f"\\node at ({float(self.k/2):.1f}, -{1}) {{hdinv = {self.hdinv():d}}};\n"
 		s += '\\end{tikzpicture}'
 		return s
 

@@ -75,7 +75,7 @@ class RationalPF:
 				stack[i] = n-k+1-(stack[i]-len(self.labels[i]))
 		else:
 			stack = [self.vertical-n] + [n-k+1]*(k-1)
-		return StackedPF(stack, self.labels)
+		return StackedPF(stack, [set(i) for i in self.labels])
 
 	def area(self):
 		h = self.horizontal
@@ -231,20 +231,10 @@ def weak_comp(n, k, outer, inner):
 			yield Composition(y)
 
 def rpf(n,k):
-	K = k*(n-k+1)
-	staircase = Partition([(k-i)*(n-k+1) for i in range(1,k)])
-	for m in range(staircase.size()+1):
-		for x in Partitions(m, outer = staircase):
-			if x:
-				vertical = [K - x[0]] + to_exp_nozero(x.conjugate())
-				vertical = vertical + [0]*(k-len(vertical))
-			else:
-				vertical = [K] + [0]*(k-1)
-			inside = [max(i-n+k, 0) for i in vertical]
-			for y in weak_comp(n, k, vertical, inside):
-				for osp in OrderedSetPartitions(n, y):
-					yield RationalPF(x, k, K, [sorted(i) for i in osp])
-
+	load('osp-rational.sage')
+	for spf in stdstackpf(n,k):
+		yield spf.rpf()
+	
 def test(n,k,a):
 	d = dict()
 	R.<q> = QQ['q']
