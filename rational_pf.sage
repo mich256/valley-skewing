@@ -64,18 +64,28 @@ class RationalPF:
 		p = self.diagram
 		if p:
 			stack = [self.vertical-p[0]]
+			index = 0
+			label = [set(self.labels[index])]
 			for i in range(k-1):
 				if i < len(p)-1:
-					stack.append(p[i] - p[i+1])
+					t = p[i] - p[i+1]
+					stack.append(t)
+					if t == 0:
+						label.append({})
+					else:
+						index += 1
+						label.append(set(self.label[index]))
 				elif i == len(p)-1:
 					stack.append(p[i])
+					label.append(self.label[-1])
 				else:
 					stack.append(0)
+					label.append({})
 			for i in range(k):
-				stack[i] = n-k+1-(stack[i]-len(self.labels[i]))
+				stack[i] = n-k+1-(stack[i]-len(label[i]))
 		else:
 			stack = [self.vertical-n] + [n-k+1]*(k-1)
-		return StackedPF(stack, [set(i) for i in self.labels])
+		return StackedPF(stack, label)
 
 	def area(self):
 		h = self.horizontal
@@ -284,17 +294,19 @@ def rpf_table(n,k,a):
 def comparison_table(n,k,a):
 	load('osp-rational.sage')
 	d1 = osp_table(n,k,a)
-	d2 = rpf_table(n,k,a)
+	# d2 = rpf_table(n,k,a)
 	print('\\begin{table}[H]\n\\[')
-	print('\\begin{array}{|c|c|c|c|}\\hline')
+	# print('\\begin{array}{|c|c|c|c|}\\hline')
+	print('\\begin{array}{|c|c|c|}\\hline')
 	for key in d1.keys():
-		for i in range(max(len(d1[key]),len(d2[key]))):
+		# for i in range(max(len(d1[key]),len(d2[key]))):
+		for i in range(len(d1[key])):
 			# assert len(d1[key]) == len(d2[key])
-			d2[key] = list(d2[key])
+			# d2[key] = list(d2[key])
 			if i == 0:
 			 	print(''.join(str(i) for i in sorted(key))+ ' & '
-				+ osp_pp(d1[key][i]) + ' & ' + latex(factor(q_prod_schedule(d1[key][i]))) +
-				 ' & ' + latex_fs(d2[key][i])
+				+ osp_pp(d1[key][i]) + ' & ' + latex(factor(q_prod_schedule(d1[key][i]))) 
+				# +' & ' + latex_fs(d2[key][i])
 				+' \\\\')
 			else:
 				s = ' &'
@@ -303,17 +315,17 @@ def comparison_table(n,k,a):
 					s += ' & ' + latex(factor(q_prod_schedule(d1[key][i])))
 				except:
 					pass
-				s += ' & '
-				try:
-					s += latex_fs(d2[key][i])
-				except:
-					pass
+				# s += ' & '
+				# try:
+				# 	s += latex_fs(d2[key][i])
+				# except:
+				# 	pass
 				s += ' \\\\'
 				print(s)
 		print('\\hline')
 	print('\\end{array}')
 	print('\\]')
-	print(f'\\caption{{$n={n}, k={k}, a={a}$.}}')
+	print(f'\\caption{{$n={n}, k={k}, \\area={a}$.}}')
 	print('\\end{table}')
 
 		
