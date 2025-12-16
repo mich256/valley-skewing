@@ -1,4 +1,5 @@
 from collections import defaultdict
+import pyperclip
 
 def to_exp_nozero(p):
 	return [i for i in p.to_exp() if i != 0]
@@ -29,9 +30,9 @@ def fr_pp(tuple_of_frozensets):
 		yield tt + t
 
 def latex_fs(fs):
-	list_of_fs = list(fr_pp(fs))
+	# list_of_fs = list(fr_pp(fs))
 	s = ''
-	for i in list_of_fs:
+	for i in fs:
 		counter = 0
 		for j in i:
 			if j:
@@ -48,6 +49,7 @@ class RationalPF:
 		self.labels = labels
 		self.horizontal = h
 		self.vertical = v
+		self.n = sum(len(i) for i in self.labels)
 		self.slope = v/h
 		if diagram:
 			self.fullv = [v - self.diagram[0]] + to_exp_nozero(self.diagram.conjugate())
@@ -67,20 +69,20 @@ class RationalPF:
 			index = 0
 			label = [set(self.labels[index])]
 			for i in range(k-1):
-				if i < len(p)-1:
+				if i < len(p):
 					t = p[i] - p[i+1]
 					stack.append(t)
 					if t == 0:
-						label.append({})
+						label.append(set())
 					else:
 						index += 1
-						label.append(set(self.label[index]))
+						label.append(set(self.labels[index]))
 				elif i == len(p)-1:
 					stack.append(p[i])
-					label.append(self.label[-1])
+					label.append(set(self.labels[-1]))
 				else:
 					stack.append(0)
-					label.append({})
+					label.append(set())
 			for i in range(k):
 				stack[i] = n-k+1-(stack[i]-len(label[i]))
 		else:
@@ -112,16 +114,18 @@ class RationalPF:
 		p = self.diagram
 		counter = 0
 		dr = {i:[] for i in range(v)}
+		ps = 0
 		for i in range(len(self.fullv)):
 			for j in range(self.fullv[i]):
 				try:
-					r[self.labels[i][j]] = counter
-					dr[counter].append(self.labels[i][j])
+					r[self.labels[ps][j]] = counter
+					dr[counter].append(self.labels[ps][j])
 				except:
-					#pass
-					dr[counter].append(None)
+					pass
+					# dr[counter].append(None)
 				counter += h // g
 			counter -= (v // g) * self.fullh[i]
+			ps += self.fullh[i]
 		return r, dr
 
 	def diagonal_reading(self):
@@ -136,7 +140,8 @@ class RationalPF:
 		for i in range(len(dr)):
 			if dr[i]:
 				fr = frozenset(dr[i])
-				t.append(frozenset({fr,len(dr[i])-len(fr)}))
+				# t.append(frozenset({fr,len(dr[i])-len(fr)}))
+				t.append(fr)
 		return tuple(reversed(t))
 
 	def labelling_permutation(self):
@@ -244,26 +249,6 @@ def rpf(n,k):
 	load('osp-rational.sage')
 	for spf in stdstackpf(n,k):
 		yield spf.rpf()
-	
-def test(n,k,a):
-	d = dict()
-	R.<q> = QQ['q']
-	print('\\begin{array}{|c|c|}\\hline')
-	for pf in rpf(n,k):
-		if pf.area() == a:
-			fs = pf.dr_set()
-			d.setdefault(fs, [])
-			d[fs].append(pf)
-			# d.setdefault(fs, 0)
-			# d[fs] += q**(pf.tdinv())
-	d2 = []
-	for fs in d.keys():
-		t = list(fr_pp(fs))
-		cc = sum([q**(pf.tdinv()) for pf in d[fs]])
-		d2.append((t, cc))
-		print(latex_fs(fs) + ' &' + latex(factor(cc)) + ' \\\\ \\hline')
-	print('\\end{array}')
-	return d, d2
 
 def lowest(n,k,a):
 	d1 = defaultdict(list)
@@ -276,56 +261,33 @@ def lowest(n,k,a):
 			d2[fs] += q**(pf.tdinv())
 	return dict(d1),dict(d2)
 
+def rpf_table(n,k,a):
+	R.<q> = QQ['q']
+	d = defaultdict(R)
+	dl = defaultdict(set)
+	s = '\\begin{table}[H]\n\\['
+	s += '\\begin{array}{|c|c|c|}\\hline\n'
+	for pf in rpf(n,k):
+		if pf.area() == a:
+			fs = pf.dr_set()
+			d[fs] += q**(pf.tdinv())
+			dl[pf.lowest()].add(fs)
+	for low in dl.keys():
+		switch = True
+		for fs in dl[low]:
+			if switch:
+				s += ''.join(str(i) for i in sorted(low))
+				switch = False
+			s += ' &' + latex_fs(fs) 
+			s += ' &' + latex(factor(d[fs])) + ' \\\\ \n'
+		s += '\\hline\n'
+	s += '\\end{array}\n\\]\n'
+	s += f'\\caption{{$n={n},k={k},\\area={a}$.}}\n'
+	s += '\\end{table}\n'
+	return pyperclip.copy(s)
+
 def test_function(n):
 	load('mpf.sage')
 	for k in range(1,n):
 		for a in range(binomial(n,2)-binomial(k+1,2)):
 			assert lowest_unm(n,k,a) == lowest(n,n-k,a)
-
-def rpf_table(n,k,a):
-	d = {}
-	for pf in rpf(n,k):
-		if pf.area() == a:
-			fs = pf.lowest()
-			d.setdefault(fs,set())
-			d[fs].add(pf.dr_set())
-	return d
-
-def comparison_table(n,k,a):
-	load('osp-rational.sage')
-	d1 = osp_table(n,k,a)
-	# d2 = rpf_table(n,k,a)
-	print('\\begin{table}[H]\n\\[')
-	# print('\\begin{array}{|c|c|c|c|}\\hline')
-	print('\\begin{array}{|c|c|c|}\\hline')
-	for key in d1.keys():
-		# for i in range(max(len(d1[key]),len(d2[key]))):
-		for i in range(len(d1[key])):
-			# assert len(d1[key]) == len(d2[key])
-			# d2[key] = list(d2[key])
-			if i == 0:
-			 	print(''.join(str(i) for i in sorted(key))+ ' & '
-				+ osp_pp(d1[key][i]) + ' & ' + latex(factor(q_prod_schedule(d1[key][i]))) 
-				# +' & ' + latex_fs(d2[key][i])
-				+' \\\\')
-			else:
-				s = ' &'
-				try:
-					s += osp_pp(d1[key][i])
-					s += ' & ' + latex(factor(q_prod_schedule(d1[key][i])))
-				except:
-					pass
-				# s += ' & '
-				# try:
-				# 	s += latex_fs(d2[key][i])
-				# except:
-				# 	pass
-				s += ' \\\\'
-				print(s)
-		print('\\hline')
-	print('\\end{array}')
-	print('\\]')
-	print(f'\\caption{{$n={n}, k={k}, \\area={a}$.}}')
-	print('\\end{table}')
-
-		

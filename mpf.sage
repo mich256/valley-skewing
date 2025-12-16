@@ -1,3 +1,6 @@
+from collections import defaultdict
+import pyperclip
+
 def rises(dw):
 	s = 1
 	for i in range(1,len(dw)):
@@ -45,6 +48,9 @@ class MPF:
 		else:
 			return self.dw.area()
 
+	def area_seq(self):
+		return self.pf.to_area_sequence()
+
 	def dinv_pairs(self):
 		if self.type == 'valley':
 			a = self.pf.to_area_sequence()
@@ -74,6 +80,16 @@ class MPF:
 		w = self.pf.to_labelling_permutation()
 		return set([tuple(sorted((w(i),w(j)))) for (i,j) in self.dinv_pairs()])
 
+	def dinv_code(self):
+		t = []
+		for i in range(len(self.pf)):
+			counter = 0
+			for pair in self.dinv_pairs():
+				if pair[0] == i+1:
+					counter += 1
+			t.append(counter)
+		return t[::-1]
+
 	def dinv(self):
 		if self.type == 'valley':
 			return len(self.dinv_pairs()) - len(self.mark)
@@ -90,8 +106,8 @@ class MPF:
 				if counter not in self.mark:
 					dr[rank].append(w(counter))
 				else:
-					#dr[rank].append(w(counter))
-					dr[rank].append((w(counter),'*'))
+					dr[rank].append(w(counter))
+					# dr[rank].append((w(counter),'*'))
 				rank += 1
 				counter += 1
 			else:
@@ -104,7 +120,7 @@ class MPF:
 		for i in range(len(dr)):
 			if dr[i]:
 				t.append(frozenset(dr[i]))
-		return tuple(t)
+		return OrderedSetPartition(t[::-1])
 
 	def marked_perm(self):
 		t = []
@@ -123,7 +139,7 @@ class MPF:
 		return t
 
 	def lowest_unmarked(self):
-		return frozenset(i for i in self.diagonal_reading()[0] if type(i) == int)
+		return frozenset(i for i in self.diagonal_reading()[0] if i not in self.marked_cars)
 
 	def pp(self):
 		self.pf.pretty_print()
@@ -153,7 +169,7 @@ class MPF:
 			if dw[i] == 0:
 				c1 += 1
 			res += '--({},{})'.format(c1, c2)
-		mark += f"\\node at ({float(n/2):.1f},-0.5) {{${latex_mp(self.marked_perm())}$}};\n"
+		# mark += f"\\node at ({float(n/2):.1f},-0.5) {{${latex_mp(self.marked_perm())}$}};\n"
 		if aa:
 			if self.type == 'rise':
 				stats += f'\\draw node at (1,-.5) {{area-: {self.area():d}}};\n'
@@ -177,15 +193,13 @@ def valleyMPF(n,k):
 			yield MPF(pf,marks)
 
 def test_val(n,k,a):
-	d = dict()
 	R.<q> = QQ['q']
-	for pf in valleyMPF(n,n-k):
+	d = defaultdict(R)
+	for pf in riseMPF(n,n-k):
 		if pf.area() == a:
 			fs = pf.dr_set()
-			d.setdefault(fs, [])
-			d[fs].append(pf)
-			# d.setdefault(fs, 0)
-			# d[fs] += q**(pf.dinv())
+			# d[fs].append(pf)
+			d[fs] += q**(pf.dinv())
 	return d
 
 def lowest_unm(n,k,a):
@@ -197,3 +211,43 @@ def lowest_unm(n,k,a):
 			d.setdefault(fs, 0)
 			d[fs] += q**(pf.dinv())
 	return d
+
+def rise_table(n,k,a):
+	load('osp-rational.sage')
+	d = test_val(n,k,a)
+	dl = defaultdict(set)
+	s = "\\begin{table}[H]\n\\[\\begin{array}{|c|c|c|}\\hline\n"
+	for pf in riseMPF(n,n-k):
+		if pf.area() == a:
+			dl[pf.lowest_unmarked()].add(pf.dr_set())
+	for low in dl.keys():
+		switch = True
+		for fs in dl[low]:
+			if switch:
+				s += ''.join(str(i) for i in sorted(low))
+				switch = False
+			s += ' &' + osp_pp(fs)
+			s += ' &' + latex(factor(d[fs])) + '\\\\ \n'
+		s += '\\hline\n'
+	s += '\\end{array}\n\\]\n'
+	s += f'\\caption{{$n={n},k={k},\\area={a}$.}}\n'
+	s += '\\end{table}\n'
+	return pyperclip.copy(s)	
+
+def latex_pf(pf):
+	w = pf.to_labelling_permutation()
+	dw = pf.to_dyck_word()
+	n = len(pf)
+	res = '\\begin{tikzpicture}[scale=0.5]\n'
+	res += f'\\draw[dotted] (0,0) grid ({n:d},{n:d});\n'
+	res += '\\draw[thick] (0,0)'
+	label = ''
+	j, k = 0, 0
+	for i in range(2*n):
+		if dw[i] == 1:
+			k += 1
+			label += f'\\node at ({j+0.5:.1f},{k-0.5:.1f}) {{{w(k):d}}};\n'
+		if dw[i] == 0:
+			j += 1
+		res += f'--({j:d},{k:d})'
+	return res+';\n'+label+"\\end{tikzpicture}"

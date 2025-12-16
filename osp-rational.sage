@@ -1,5 +1,6 @@
 from sage.combinat.q_analogues import q_int
 from collections import defaultdict
+import pyperclip
 
 def osp_to_permutation(osp):
 	m = 0
@@ -187,11 +188,14 @@ class StackedPF:
 				new_stack.append(self.stack[i])
 		return StackedPF(new_stack, new_label)
 
-	def area(self):
+	def area_seq(self):
 		m = self.stack
 		n = self.n
 		mm = partial_sums(mosp_to_composition(self.label)) + [n]*(len(self.stack) - len(self.label))
 		return SkewPartition([mm[::-1], m.partial_sums()[::-1]]).column_lengths()
+
+	def area(self):
+		return sum(self.area_seq())
 
 	def height(self):
 		p1 = 0
@@ -218,9 +222,12 @@ class StackedPF:
 				t.add(min(self.label[i+1]))
 		return t
 
+	def labelling_perm(self):
+		return Permutation([j for i in self.label for j in sorted(i)])
+
 	def hdinv(self):
 		pairs = []
-		l = [j for i in self.label for j in sorted(i)]
+		l = self.labelling_perm()
 		h = self.height()
 		n = len(l)
 		for i in range(n):
@@ -231,8 +238,8 @@ class StackedPF:
 
 	def wdinv(self):
 		pairs = []
-		l = [j for i in self.label for j in sorted(i)]
-		a = self.area()
+		l = self.labelling_perm()
+		a = self.area_seq()
 		diag = [0] + [i for i in self.stack.partial_sums()[:-1]]
 		for i in diag:
 			for j in range(i+1,len(l)):
@@ -257,7 +264,7 @@ class StackedPF:
 				s += f'\\node at ({i+inc:.1f},{ps+inc:.1f}) {{{t[j]:d}}};\n'
 				ps += 1
 		if aa:
-			s += f"\\node at ({float(self.k/2):.1f}, -{0.5}) {{area = {sum(self.area()):d}}};\n"
+			s += f"\\node at ({float(self.k/2):.1f}, -{0.5}) {{area = {self.area():d}}};\n"
 		if wd:
 			s += f"\\node at ({float(self.k/2):.1f}, -{1}) {{wdinv = {self.wdinv():d}}};\n"
 		if hd:
@@ -300,7 +307,7 @@ class StackedPF:
 	def valley(self):
 		load('mpf.sage')
 		w = Permutation([j for i in self.label for j in sorted(i)])
-		pf = ParkingFunction(labelling = w, area_sequence = self.area())
+		pf = ParkingFunction(labelling = w, area_sequence = self.area_seq())
 		return MPF(pf, self.valley_mark())
 
 	def rpf(self):
@@ -318,7 +325,8 @@ class StackedPF:
 				pass
 			ps += n-k-self.stack[i]+1
 			par.append(v-ps)
-		return RationalPF(par, h, v, [sorted(i) for i in self.label])
+		temp = [sorted(i) for i in self.label]
+		return RationalPF(par, h, v, temp)
 
 def stdstackpf(n,k):
 	for m in Compositions(n, min_length = k, max_length = k):
@@ -336,6 +344,12 @@ def stdstackpfn(n):
 				for osp in OrderedSetPartitions(n, mm):
 					yield StackedPF(m, osp)
 
+def empty_column(spf):
+	for i in spf.label:
+		if len(i) == 0:
+			return True
+	return False
+	
 def maj_d(w,d):
 	assert d < len(w)
 	md = 0
@@ -364,21 +378,34 @@ def osp_pp(osp):
 
 def test_osp(n,k,a):
 	d = {}
-	print('\\begin{array}{|c|c|}\\hline')
 	for osp in OrderedSetPartitions(n,k):
 		if osp_minimaj(osp) == a:
 			d[osp] = q_prod_schedule(osp)
-			print(osp_pp(osp) +' & ' + latex(d[osp]) + ' \\\\ \\hline')
-	print('\\end{array}')
 	return d
 
+def lowest_osp(osp):
+	w = osp_to_permutation(osp)
+	return frozenset([i for i in w.runs()[-1] if osp_to_markings(osp)[w.inverse()(i)-1] != 1])
+
 def osp_table(n,k,a):
-	d = {}
+	R.<q> = QQ['q']
+	d = test_osp(n,k,a)
+	dl = defaultdict(set)
+	s = '\\begin{table}[H]\n\\['
+	s += '\\begin{array}{|c|c|c|}\\hline\n'
 	for osp in OrderedSetPartitions(n,k):
-		w = osp_to_permutation(osp)
 		if osp_minimaj(osp) == a:
-			fs = [i for i in w.runs()[-1] if osp_to_markings(osp)[w.inverse()(i)-1] != 1]
-			fs = frozenset(fs)
-			d.setdefault(fs,[])
-			d[fs].append(osp)
-	return d
+			dl[lowest_osp(osp)].add(osp)
+	for low in dl.keys():
+		switch = True
+		for fs in dl[low]:
+			if switch:
+				s += ''.join(str(i) for i in sorted(low))
+				switch = False
+			s += ' &' + osp_pp(fs)
+			s += ' &' + latex(factor(d[fs])) + '\\\\ \n'
+		s += '\\hline\n'
+	s += '\\end{array}\n\\]\n'
+	s += f'\\caption{{$n={n},k={k},\\area={a}$.}}\n'
+	s += '\\end{table}\n'
+	return pyperclip.copy(s)
